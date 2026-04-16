@@ -1,6 +1,7 @@
 /*
  * Design: "Authoritative Counsel" — Authoritative law firm / engineering office aesthetic
  * Deep Navy + Gold accents, Noto Serif KR headings, generous whitespace
+ * Hero: concise slogan + 5 service text links inside hero
  */
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
@@ -11,7 +12,6 @@ import {
   Users,
   CheckCircle2,
   Phone,
-  ChevronRight,
   Zap,
   MapPin,
   Target,
@@ -39,7 +39,6 @@ function CountUp({ end, suffix = "" }: { end: number; suffix?: string }) {
           const animate = (now: number) => {
             const elapsed = now - startTime;
             const progress = Math.min(elapsed / duration, 1);
-            // ease-out cubic
             const eased = 1 - Math.pow(1 - progress, 3);
             setCount(Math.floor(eased * end));
             if (progress < 1) {
@@ -126,75 +125,83 @@ const whyChooseData = [
   },
 ];
 
+/* 5대 서비스 텍스트 링크용 데이터 (히어로 내 배치) */
+const heroServiceLabels = [
+  { slug: "prevention-plan", label: "화학사고 예방관리 계획서" },
+  { slug: "installation-inspection", label: "취급시설 설치검사" },
+  { slug: "business-license", label: "영업허가" },
+  { slug: "psm", label: "공정안전보고서(PSM)" },
+  { slug: "hazard-prevention", label: "유해위험방지계획서" },
+];
+
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
       {/* Hero Section */}
-      <section className="relative min-h-[600px] lg:min-h-[700px] flex items-center overflow-hidden">
+      <section className="relative min-h-[580px] sm:min-h-[620px] lg:min-h-[700px] flex items-end overflow-hidden">
+        {/* Background image */}
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${images.hero})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy/90 via-navy/75 to-navy/50" />
-        <div className="relative container py-20 lg:py-28">
-          <div className="max-w-2xl">
-            <div className="gold-line-wide mb-8" />
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-[3.5rem] font-bold text-white leading-tight mb-6">
-              화학사고 예방을 최선으로,
-              <br />
-              <span className="text-gold">내 회사처럼</span> 일하는 파트너
-            </h1>
-            <p className="text-white/80 text-base lg:text-lg leading-relaxed mb-10 max-w-xl">
-              화학물질관리기술은 20년 이상의 EHS 전문 경력을 바탕으로
-              화학사고예방관리계획서, 설치검사, 영업허가, PSM, 유해위험방지계획서
-              전 분야를 아우르는 원스톱 컨설팅을 제공합니다.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/contact">
-                <Button className="bg-gold hover:bg-gold-dark text-navy font-bold px-8 py-3 rounded-sm text-base">
-                  무료 상담 신청
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-              <a href={`tel:${companyInfo.phone}`}>
-                <Button
-                  variant="outline"
-                  className="border-2 border-white/40 text-white hover:bg-white/10 px-8 py-3 rounded-sm text-base bg-transparent"
-                >
-                  <Phone className="w-4 h-4 mr-2" />
-                  {companyInfo.phone}
-                </Button>
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+        {/* Gradient overlay — stronger at bottom for text legibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/95 via-[#000000]/50 to-[#000000]/20" />
 
-      {/* Quick Menu - 5 Services */}
-      <section className="relative -mt-16 z-10">
-        <div className="container">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4">
-            {services.map((s) => {
-              const Icon = s.icon;
-              return (
-                <Link key={s.id} href={`/service/${s.slug}`}>
-                  <div className="bg-white rounded-sm shadow-xl hover:shadow-2xl transition-all duration-300 p-5 lg:p-6 group border border-border/50 hover:border-gold/30 h-full">
-                    <div className="w-12 h-12 bg-navy/5 rounded-sm flex items-center justify-center mb-4 group-hover:bg-gold/10 transition-colors">
-                      <Icon className="w-6 h-6 text-navy group-hover:text-gold transition-colors" />
-                    </div>
-                    <h3 className="text-navy font-bold text-sm lg:text-base mb-1 font-serif leading-snug">
-                      {s.shortTitle}
-                    </h3>
-                    <p className="text-muted-foreground text-xs">
-                      {s.law} {s.lawArticle}
-                    </p>
-                    <ChevronRight className="w-4 h-4 text-gold mt-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
+        <div className="relative container pb-12 sm:pb-14 lg:pb-16 pt-36 sm:pt-40 lg:pt-48">
+          {/* Slogan */}
+          <h1 className="text-[1.65rem] sm:text-3xl lg:text-[2.6rem] xl:text-5xl font-bold text-white leading-snug mb-5 lg:mb-6 max-w-2xl drop-shadow-lg">
+            화학사고 예방을 최선으로,
+            <br />
+            <span className="text-gold">내 회사처럼</span> 일하는 파트너
+          </h1>
+
+          {/* Thin gold divider */}
+          <div className="w-16 h-[2px] bg-gold mb-6 lg:mb-7" />
+
+          {/* 5 Service text links — styled as a horizontal nav with separators */}
+          <nav
+            className="flex flex-wrap items-center gap-y-2.5 mb-8 lg:mb-10"
+            aria-label="5대 핵심 서비스"
+          >
+            {heroServiceLabels.map((svc, i) => (
+              <span key={svc.slug} className="flex items-center">
+                <Link
+                  href={`/service/${svc.slug}`}
+                  className="group inline-flex items-center gap-1.5 text-white/90 hover:text-gold transition-colors text-[13px] sm:text-sm lg:text-[15px] font-medium"
+                >
+                  <span className="text-gold text-[11px] sm:text-xs font-bold opacity-70 group-hover:opacity-100">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="border-b border-transparent group-hover:border-gold pb-0.5 transition-all">
+                    {svc.label}
+                  </span>
                 </Link>
-              );
-            })}
+                {i < heroServiceLabels.length - 1 && (
+                  <span className="mx-2 sm:mx-3 text-white/20 text-xs select-none">|</span>
+                )}
+              </span>
+            ))}
+          </nav>
+
+          {/* CTA buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <Link href="/contact">
+              <Button className="bg-gold hover:bg-gold-dark text-[#000000] font-bold px-7 py-3 rounded-sm text-sm sm:text-base">
+                무료 상담 신청
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+            <a href={`tel:${companyInfo.phone}`}>
+              <Button
+                variant="outline"
+                className="border-2 border-white/30 text-white hover:bg-white/10 px-7 py-3 rounded-sm text-sm sm:text-base bg-transparent"
+              >
+                <Phone className="w-4 h-4 mr-2" />
+                {companyInfo.phone}
+              </Button>
+            </a>
           </div>
         </div>
       </section>
