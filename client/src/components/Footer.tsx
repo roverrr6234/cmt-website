@@ -76,6 +76,11 @@ export default function Footer() {
                 </a>
               </li>
               <li>
+                <Link href="/notices" className="text-white/70 text-sm hover:text-gold transition-colors">
+                  알림마당
+                </Link>
+              </li>
+              <li>
                 <Link href="/contact" className="text-white/70 text-sm hover:text-gold transition-colors">
                   상담 신청
                 </Link>

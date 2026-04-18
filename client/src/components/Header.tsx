@@ -1,13 +1,14 @@
 /*
  * Design: White header bar (#FFFFFF) with black/navy text
  * Left: Logo image + "Chemical Management Technology" text
- * Center-right: Phone number (051-412-7707)
+ * Center: Phone number (051-412-7707)
+ * Center-Right: 알림마당 button
  * Far right: Hamburger menu icon (always visible)
- * Below header: 5-service GNB navigation bar (fixed, always visible)
+ * Below header: 5-service GNB navigation bar (fixed, standard names)
  */
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Phone, Menu, X, ChevronDown } from "lucide-react";
+import { Phone, Menu, X, ChevronDown, Bell } from "lucide-react";
 import { companyInfo, services } from "@/lib/serviceData";
 import { images } from "@/lib/images";
 
@@ -56,7 +57,7 @@ export default function Header() {
             </div>
           </Link>
 
-          {/* Center-Right: Phone Number */}
+          {/* Center: Phone Number */}
           <a
             href={`tel:${companyInfo.phone}`}
             className="flex items-center gap-2 sm:gap-2.5 hover:opacity-80 transition-opacity"
@@ -69,37 +70,56 @@ export default function Header() {
             </span>
           </a>
 
-          {/* Right: Hamburger Menu */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="p-2 sm:p-2.5 text-navy hover:text-gold transition-colors ml-2 sm:ml-4"
-            aria-label="메뉴"
-          >
-            {mobileOpen ? (
-              <X className="w-6 h-6 sm:w-7 sm:h-7" />
-            ) : (
-              <Menu className="w-6 h-6 sm:w-7 sm:h-7" />
-            )}
-          </button>
+          {/* Right group: 알림마당 + Hamburger */}
+          <div className="flex items-center gap-1 sm:gap-3">
+            {/* 알림마당 Button */}
+            <Link
+              href="/notices"
+              className={`hidden sm:flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-sm transition-colors ${
+                location === "/notices" || location.startsWith("/notices")
+                  ? "text-gold bg-navy/5"
+                  : "text-navy/80 hover:text-gold hover:bg-navy/5"
+              }`}
+            >
+              <Bell className="w-4 h-4" />
+              <span>알림마당</span>
+            </Link>
+
+            {/* Hamburger Menu */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="p-2 sm:p-2.5 text-navy hover:text-gold transition-colors"
+              aria-label="메뉴"
+            >
+              {mobileOpen ? (
+                <X className="w-6 h-6 sm:w-7 sm:h-7" />
+              ) : (
+                <Menu className="w-6 h-6 sm:w-7 sm:h-7" />
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* ── 5-Service GNB Bar ── */}
+        {/* ── 5-Service GNB Bar (Standard Names) ── */}
         <div className="border-t border-gray-200 bg-white">
           <div className="container">
-            <nav className="flex items-center gap-0 overflow-x-auto scrollbar-hide" aria-label="5대 핵심 서비스">
+            <nav
+              className="flex items-center gap-0 overflow-x-auto scrollbar-hide -mx-1"
+              aria-label="5대 핵심 서비스"
+            >
               {services.map((s, i) => {
                 const isActive = location === `/service/${s.slug}`;
                 return (
                   <Link
                     key={s.id}
                     href={`/service/${s.slug}`}
-                    className={`relative flex items-center gap-1.5 px-3 sm:px-4 lg:px-5 py-3 text-[12px] sm:text-[13px] lg:text-sm font-medium whitespace-nowrap transition-colors shrink-0 ${
+                    className={`relative flex items-center gap-1.5 px-2.5 sm:px-3 lg:px-4 py-3 text-[11px] sm:text-[12px] lg:text-[13px] font-medium whitespace-nowrap transition-colors shrink-0 ${
                       isActive
                         ? "text-gold"
                         : "text-navy/70 hover:text-gold"
                     }`}
                   >
-                    <span className="text-[10px] sm:text-[11px] font-bold text-gold/60">
+                    <span className="text-[9px] sm:text-[10px] font-bold text-gold/60">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span>{s.shortTitle}</span>
@@ -156,7 +176,7 @@ export default function Header() {
                             : "text-navy/60 border-gray-200 hover:text-gold hover:border-gold hover:bg-navy/5"
                         }`}
                       >
-                        {s.title}
+                        {s.shortTitle}
                         <span className="block text-xs text-navy/30 mt-0.5">
                           {s.law} {s.lawArticle}
                         </span>
@@ -165,6 +185,18 @@ export default function Header() {
                   </div>
                 )}
               </div>
+
+              <Link
+                href="/notices"
+                className={`flex items-center gap-2 px-5 py-3 text-sm font-medium rounded-sm transition-colors ${
+                  location.startsWith("/notices")
+                    ? "text-gold bg-navy/5"
+                    : "text-navy/80 hover:text-gold hover:bg-navy/5"
+                }`}
+              >
+                <Bell className="w-4 h-4" />
+                알림마당
+              </Link>
 
               <a
                 href={BLOG_URL}

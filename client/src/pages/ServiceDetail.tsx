@@ -29,6 +29,7 @@ import StickyPhone from "@/components/StickyPhone";
 import { services, companyInfo } from "@/lib/serviceData";
 import type { ServiceSection } from "@/lib/serviceData";
 import { useEffect, useRef, useState, useCallback } from "react";
+import { diagramComponents } from "@/components/diagrams";
 
 /* ── Breadcrumb with hover dropdown ── */
 function BreadcrumbNav({ currentSlug, currentTitle }: { currentSlug: string; currentTitle: string }) {
@@ -299,6 +300,16 @@ function ChecklistBox({ section }: { section: ServiceSection }) {
 }
 
 function ProcedureImage({ section }: { section: ServiceSection }) {
+  // Check if a diagram component exists for this section id
+  const DiagramComponent = diagramComponents[section.id];
+  if (DiagramComponent) {
+    return (
+      <div className="bg-white border border-border rounded-sm p-4 lg:p-6 overflow-hidden">
+        <DiagramComponent />
+      </div>
+    );
+  }
+  // Fallback to image if no diagram component
   if (!section.image) return null;
   const img = section.image;
   return (
