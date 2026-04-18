@@ -1,14 +1,17 @@
 /*
- * Design: Single unified black header bar (#000000)
+ * Design: White header bar (#FFFFFF) with black/navy text
  * Left: Logo image + "Chemical Management Technology" text
  * Center-right: Phone number (051-412-7707)
  * Far right: Hamburger menu icon (always visible)
+ * Below header: 5-service GNB navigation bar (fixed, always visible)
  */
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Phone, Menu, X, ChevronDown } from "lucide-react";
 import { companyInfo, services } from "@/lib/serviceData";
 import { images } from "@/lib/images";
+
+const BLOG_URL = "https://blog.naver.com/ckt9054";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -29,9 +32,10 @@ export default function Header() {
 
   return (
     <>
+      {/* ── Main Header Bar (White) ── */}
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 bg-[#000000] ${
-          isScrolled ? "shadow-xl" : "shadow-md"
+        className={`sticky top-0 z-50 transition-all duration-300 bg-white ${
+          isScrolled ? "shadow-lg" : "shadow-sm"
         }`}
       >
         <div className="container flex items-center justify-between h-16 sm:h-[72px] lg:h-20">
@@ -43,10 +47,10 @@ export default function Header() {
               className="h-11 sm:h-[52px] lg:h-[60px] w-auto object-contain"
             />
             <div className="hidden sm:block leading-tight">
-              <p className="text-white/90 text-xs lg:text-[13px] font-semibold tracking-wide">
+              <p className="text-navy text-xs lg:text-[13px] font-semibold tracking-wide">
                 Chemical Management
               </p>
-              <p className="text-white/90 text-xs lg:text-[13px] font-semibold tracking-wide">
+              <p className="text-navy text-xs lg:text-[13px] font-semibold tracking-wide">
                 Technology
               </p>
             </div>
@@ -60,7 +64,7 @@ export default function Header() {
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gold/20 flex items-center justify-center shrink-0">
               <Phone className="w-4 h-4 sm:w-[18px] sm:h-[18px] text-gold" />
             </div>
-            <span className="text-white font-bold text-base sm:text-lg lg:text-xl tracking-wide font-sans">
+            <span className="text-navy font-bold text-base sm:text-lg lg:text-xl tracking-wide font-sans">
               {companyInfo.phone}
             </span>
           </a>
@@ -68,7 +72,7 @@ export default function Header() {
           {/* Right: Hamburger Menu */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="p-2 sm:p-2.5 text-white hover:text-gold transition-colors ml-2 sm:ml-4"
+            className="p-2 sm:p-2.5 text-navy hover:text-gold transition-colors ml-2 sm:ml-4"
             aria-label="메뉴"
           >
             {mobileOpen ? (
@@ -79,16 +83,46 @@ export default function Header() {
           </button>
         </div>
 
-        {/* Dropdown Menu */}
+        {/* ── 5-Service GNB Bar ── */}
+        <div className="border-t border-gray-200 bg-white">
+          <div className="container">
+            <nav className="flex items-center gap-0 overflow-x-auto scrollbar-hide" aria-label="5대 핵심 서비스">
+              {services.map((s, i) => {
+                const isActive = location === `/service/${s.slug}`;
+                return (
+                  <Link
+                    key={s.id}
+                    href={`/service/${s.slug}`}
+                    className={`relative flex items-center gap-1.5 px-3 sm:px-4 lg:px-5 py-3 text-[12px] sm:text-[13px] lg:text-sm font-medium whitespace-nowrap transition-colors shrink-0 ${
+                      isActive
+                        ? "text-gold"
+                        : "text-navy/70 hover:text-gold"
+                    }`}
+                  >
+                    <span className="text-[10px] sm:text-[11px] font-bold text-gold/60">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span>{s.shortTitle}</span>
+                    {isActive && (
+                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-gold" />
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+
+        {/* ── Dropdown Menu (Hamburger) ── */}
         {mobileOpen && (
-          <div className="border-t border-white/10 bg-[#0a0a0a] animate-in slide-in-from-top-2 duration-200">
+          <div className="border-t border-gray-200 bg-white animate-in slide-in-from-top-2 duration-200 shadow-xl">
             <div className="container py-4 space-y-1">
               <Link
                 href="/"
                 className={`block px-5 py-3 text-sm font-medium rounded-sm transition-colors ${
                   location === "/"
-                    ? "text-gold bg-white/5"
-                    : "text-white/80 hover:text-gold hover:bg-white/5"
+                    ? "text-gold bg-navy/5"
+                    : "text-navy/80 hover:text-gold hover:bg-navy/5"
                 }`}
               >
                 홈
@@ -99,8 +133,8 @@ export default function Header() {
                   onClick={() => setServiceDropdown(!serviceDropdown)}
                   className={`w-full flex items-center justify-between px-5 py-3 text-sm font-medium rounded-sm transition-colors ${
                     location.startsWith("/service")
-                      ? "text-gold bg-white/5"
-                      : "text-white/80 hover:text-gold hover:bg-white/5"
+                      ? "text-gold bg-navy/5"
+                      : "text-navy/80 hover:text-gold hover:bg-navy/5"
                   }`}
                 >
                   주요 업무
@@ -118,12 +152,12 @@ export default function Header() {
                         href={`/service/${s.slug}`}
                         className={`block px-5 py-2.5 text-sm rounded-sm border-l-2 transition-colors ${
                           location === `/service/${s.slug}`
-                            ? "text-gold border-gold bg-white/5"
-                            : "text-white/60 border-white/10 hover:text-gold hover:border-gold hover:bg-white/5"
+                            ? "text-gold border-gold bg-navy/5"
+                            : "text-navy/60 border-gray-200 hover:text-gold hover:border-gold hover:bg-navy/5"
                         }`}
                       >
                         {s.title}
-                        <span className="block text-xs text-white/30 mt-0.5">
+                        <span className="block text-xs text-navy/30 mt-0.5">
                           {s.law} {s.lawArticle}
                         </span>
                       </Link>
@@ -132,29 +166,27 @@ export default function Header() {
                 )}
               </div>
 
-              <Link
-                href="/blog"
-                className={`block px-5 py-3 text-sm font-medium rounded-sm transition-colors ${
-                  location === "/blog"
-                    ? "text-gold bg-white/5"
-                    : "text-white/80 hover:text-gold hover:bg-white/5"
-                }`}
+              <a
+                href={BLOG_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block px-5 py-3 text-sm font-medium rounded-sm transition-colors text-navy/80 hover:text-gold hover:bg-navy/5"
               >
                 블로그
-              </Link>
+              </a>
 
               <Link
                 href="/contact"
                 className={`block px-5 py-3 text-sm font-medium rounded-sm transition-colors ${
                   location === "/contact"
-                    ? "text-gold bg-white/5"
-                    : "text-white/80 hover:text-gold hover:bg-white/5"
+                    ? "text-gold bg-navy/5"
+                    : "text-navy/80 hover:text-gold hover:bg-navy/5"
                 }`}
               >
                 상담 신청
               </Link>
 
-              <div className="pt-3 mt-3 border-t border-white/10">
+              <div className="pt-3 mt-3 border-t border-gray-200">
                 <a
                   href={`tel:${companyInfo.phone}`}
                   className="flex items-center gap-3 px-5 py-3 text-gold font-bold text-lg"
@@ -164,7 +196,7 @@ export default function Header() {
                 </a>
                 <Link
                   href="/contact"
-                  className="block mx-5 mt-2 px-6 py-3 bg-gold text-[#000000] text-sm font-bold rounded-sm text-center hover:bg-gold-light transition-colors"
+                  className="block mx-5 mt-2 px-6 py-3 bg-gold text-navy text-sm font-bold rounded-sm text-center hover:bg-gold-light transition-colors"
                 >
                   무료 상담 신청
                 </Link>

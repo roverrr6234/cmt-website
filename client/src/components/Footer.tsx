@@ -1,10 +1,13 @@
 /*
  * Design: "Authoritative Counsel" — Deep Navy footer with gold accents
  * SEO keywords: 부산, 울산, 경남 포함 전국 화학안전 컨설팅
+ * Blog link → external Naver blog (target="_blank")
  */
 import { Link } from "wouter";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { companyInfo, services } from "@/lib/serviceData";
+
+const BLOG_URL = "https://blog.naver.com/ckt9054";
 
 export default function Footer() {
   return (
@@ -63,9 +66,14 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/blog" className="text-white/70 text-sm hover:text-gold transition-colors">
+                <a
+                  href={BLOG_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/70 text-sm hover:text-gold transition-colors"
+                >
                   블로그
-                </Link>
+                </a>
               </li>
               <li>
                 <Link href="/contact" className="text-white/70 text-sm hover:text-gold transition-colors">

@@ -28,7 +28,72 @@ import ContactForm from "@/components/ContactForm";
 import StickyPhone from "@/components/StickyPhone";
 import { services, companyInfo } from "@/lib/serviceData";
 import type { ServiceSection } from "@/lib/serviceData";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+
+/* ── Breadcrumb with hover dropdown ── */
+function BreadcrumbNav({ currentSlug, currentTitle }: { currentSlug: string; currentTitle: string }) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleEnter = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setDropdownOpen(true);
+  }, []);
+
+  const handleLeave = useCallback(() => {
+    timeoutRef.current = setTimeout(() => setDropdownOpen(false), 200);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  return (
+    <nav className="flex items-center gap-2 text-sm text-white/50 mb-8" aria-label="breadcrumb">
+      <Link href="/" className="hover:text-gold transition-colors">
+        홈
+      </Link>
+      <ChevronRight className="w-3 h-3" />
+      <div
+        className="relative"
+        onMouseEnter={handleEnter}
+        onMouseLeave={handleLeave}
+      >
+        <button
+          className="hover:text-gold transition-colors cursor-pointer underline-offset-4 hover:underline"
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+        >
+          주요 업무
+        </button>
+        {dropdownOpen && (
+          <div
+            className="absolute top-full left-0 mt-2 w-64 bg-white rounded-sm shadow-2xl border border-gray-200 py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150"
+            onMouseEnter={handleEnter}
+            onMouseLeave={handleLeave}
+          >
+            {services.map((s) => (
+              <Link
+                key={s.id}
+                href={`/service/${s.slug}`}
+                className={`block px-4 py-2.5 text-sm transition-colors ${
+                  s.slug === currentSlug
+                    ? "text-gold bg-navy/5 font-semibold"
+                    : "text-navy/80 hover:text-gold hover:bg-navy/5"
+                }`}
+              >
+                {s.title}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+      <ChevronRight className="w-3 h-3" />
+      <span className="text-gold">{currentTitle}</span>
+    </nav>
+  );
+}
 
 /* ── Fade-in on scroll ── */
 function FadeIn({
@@ -355,15 +420,7 @@ export default function ServiceDetail() {
       {/* ── Breadcrumb + Hero ── */}
       <section className="bg-navy py-16 lg:py-24">
         <div className="container">
-          <nav className="flex items-center gap-2 text-sm text-white/50 mb-8">
-            <Link href="/" className="hover:text-gold transition-colors">
-              홈
-            </Link>
-            <ChevronRight className="w-3 h-3" />
-            <span>주요 업무</span>
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-gold">{service.shortTitle}</span>
-          </nav>
+          <BreadcrumbNav currentSlug={slug || ''} currentTitle={service.shortTitle} />
           <div className="flex items-start gap-6">
             <div className="w-16 h-16 bg-gold/20 rounded-sm items-center justify-center shrink-0 hidden sm:flex">
               <Icon className="w-8 h-8 text-gold" />

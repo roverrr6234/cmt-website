@@ -1,7 +1,8 @@
 /*
  * Design: "Authoritative Counsel" — Authoritative law firm / engineering office aesthetic
  * Deep Navy + Gold accents, Noto Serif KR headings, generous whitespace
- * Hero: concise slogan + 5 service text links inside hero
+ * Hero: bold slogan + enlarged CTA buttons (no service links — moved to GNB)
+ * About section: text-only (meeting photo removed)
  */
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
@@ -125,80 +126,50 @@ const whyChooseData = [
   },
 ];
 
-/* 5대 서비스 텍스트 링크용 데이터 (히어로 내 배치) */
-const heroServiceLabels = [
-  { slug: "prevention-plan", label: "화학사고 예방관리 계획서" },
-  { slug: "installation-inspection", label: "취급시설 설치검사" },
-  { slug: "business-license", label: "영업허가" },
-  { slug: "psm", label: "공정안전보고서(PSM)" },
-  { slug: "hazard-prevention", label: "유해위험방지계획서" },
-];
-
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      {/* Hero Section */}
-      <section className="relative min-h-[580px] sm:min-h-[620px] lg:min-h-[700px] flex items-end overflow-hidden">
+      {/* Hero Section — enlarged slogan + bigger CTA */}
+      <section className="relative min-h-[540px] sm:min-h-[600px] lg:min-h-[680px] flex items-center overflow-hidden">
         {/* Background image */}
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${images.hero})` }}
         />
-        {/* Gradient overlay — stronger at bottom for text legibility */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/95 via-[#000000]/50 to-[#000000]/20" />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/95 via-[#000000]/55 to-[#000000]/25" />
 
-        <div className="relative container pb-12 sm:pb-14 lg:pb-16 pt-36 sm:pt-40 lg:pt-48">
-          {/* Slogan */}
-          <h1 className="text-[1.65rem] sm:text-3xl lg:text-[2.6rem] xl:text-5xl font-bold text-white leading-snug mb-5 lg:mb-6 max-w-2xl drop-shadow-lg">
+        <div className="relative container py-20 sm:py-24 lg:py-28">
+          {/* Slogan — bigger, bolder */}
+          <h1 className="text-[2rem] sm:text-4xl lg:text-[3.2rem] xl:text-[3.8rem] font-extrabold text-white leading-[1.2] mb-6 lg:mb-8 max-w-3xl drop-shadow-xl">
             화학사고 예방을 최선으로,
             <br />
             <span className="text-gold">내 회사처럼</span> 일하는 파트너
           </h1>
 
           {/* Thin gold divider */}
-          <div className="w-16 h-[2px] bg-gold mb-6 lg:mb-7" />
+          <div className="w-20 h-[3px] bg-gold mb-7 lg:mb-9" />
 
-          {/* 5 Service text links — styled as a horizontal nav with separators */}
-          <nav
-            className="flex flex-wrap items-center gap-y-2.5 mb-8 lg:mb-10"
-            aria-label="5대 핵심 서비스"
-          >
-            {heroServiceLabels.map((svc, i) => (
-              <span key={svc.slug} className="flex items-center">
-                <Link
-                  href={`/service/${svc.slug}`}
-                  className="group inline-flex items-center gap-1.5 text-white/90 hover:text-gold transition-colors text-[13px] sm:text-sm lg:text-[15px] font-medium"
-                >
-                  <span className="text-gold text-[11px] sm:text-xs font-bold opacity-70 group-hover:opacity-100">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span className="border-b border-transparent group-hover:border-gold pb-0.5 transition-all">
-                    {svc.label}
-                  </span>
-                </Link>
-                {i < heroServiceLabels.length - 1 && (
-                  <span className="mx-2 sm:mx-3 text-white/20 text-xs select-none">|</span>
-                )}
-              </span>
-            ))}
-          </nav>
+          <p className="text-white/70 text-base sm:text-lg lg:text-xl max-w-2xl mb-8 lg:mb-10 leading-relaxed">
+            화학물질관리법 · 산업안전보건법 전문 컨설팅
+          </p>
 
-          {/* CTA buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          {/* CTA buttons — significantly enlarged */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
             <Link href="/contact">
-              <Button className="bg-gold hover:bg-gold-dark text-[#000000] font-bold px-7 py-3 rounded-sm text-sm sm:text-base">
+              <Button className="bg-gold hover:bg-gold-dark text-[#000000] font-extrabold px-10 sm:px-12 py-4 sm:py-5 rounded-sm text-base sm:text-lg lg:text-xl shadow-xl hover:shadow-2xl transition-all">
                 무료 상담 신청
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 ml-3" />
               </Button>
             </Link>
             <a href={`tel:${companyInfo.phone}`}>
               <Button
                 variant="outline"
-                className="border-2 border-white/30 text-white hover:bg-white/10 px-7 py-3 rounded-sm text-sm sm:text-base bg-transparent"
+                className="border-2 border-white/40 text-white hover:bg-white/10 px-10 sm:px-12 py-4 sm:py-5 rounded-sm text-base sm:text-lg lg:text-xl bg-transparent font-bold shadow-lg"
               >
-                <Phone className="w-4 h-4 mr-2" />
+                <Phone className="w-5 h-5 sm:w-6 sm:h-6 mr-3" />
                 {companyInfo.phone}
               </Button>
             </a>
@@ -206,59 +177,46 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About / Experience Section */}
+      {/* About / Experience Section — TEXT ONLY (meeting photo removed) */}
       <section className="section-padding bg-white">
         <div className="container">
           <FadeInSection>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-              <div>
-                <p className="text-gold font-semibold text-sm uppercase tracking-wider mb-4 font-sans">
-                  About Us
-                </p>
-                <h2 className="text-2xl lg:text-4xl font-bold text-navy mb-6 leading-tight">
-                  20년 이상의 EHS 전문 경력,
-                  <br />
-                  신뢰할 수 있는 파트너
-                </h2>
-                <div className="gold-line mb-8" />
-                <p className="text-foreground/80 text-base leading-relaxed mb-6">
-                  화학물질관리기술은 화학물질관리법과 산업안전보건법에 근거한 각종
-                  인허가 및 안전 컨설팅을 전문으로 수행하는 기업입니다. 신규 화학물질
-                  취급 공장 설립부터 기존 사업장의 설비 변경까지, 기업이 필요로 하는
-                  모든 화학안전 서비스를 제공합니다.
-                </p>
-                <ul className="space-y-3 mb-8">
-                  {[
-                    "화학사고예방관리계획서 작성 및 제출 대행",
-                    "취급시설 설치·정기·수시검사 수검 지원",
-                    "유해화학물질 영업허가 취득 전 과정 대행",
-                    "공정안전보고서(PSM) 작성 및 심사 대응",
-                    "유해위험방지계획서 작성 및 현장 확인 대응",
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-gold shrink-0 mt-0.5" />
-                      <span className="text-sm text-foreground/80">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/contact">
-                  <Button className="bg-navy hover:bg-navy-light text-white px-8 py-3 rounded-sm">
-                    상담 문의하기
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </div>
-              <div className="relative">
-                <img
-                  src={images.aboutTeam}
-                  alt="화학물질관리기술 전문 팀"
-                  className="rounded-sm shadow-2xl w-full object-cover aspect-[4/3]"
-                />
-                <div className="absolute -bottom-6 -left-6 bg-navy text-white p-6 rounded-sm shadow-xl hidden lg:block">
-                  <p className="text-gold text-4xl font-bold font-serif">20+</p>
-                  <p className="text-white/80 text-sm mt-1">년 전문 경력</p>
-                </div>
-              </div>
+            <div className="max-w-3xl">
+              <p className="text-gold font-semibold text-sm uppercase tracking-wider mb-4 font-sans">
+                About Us
+              </p>
+              <h2 className="text-2xl lg:text-4xl font-bold text-navy mb-6 leading-tight">
+                20년 이상의 EHS 전문 경력,
+                <br />
+                신뢰할 수 있는 파트너
+              </h2>
+              <div className="gold-line mb-8" />
+              <p className="text-foreground/80 text-base leading-relaxed mb-6">
+                화학물질관리기술은 화학물질관리법과 산업안전보건법에 근거한 각종
+                인허가 및 안전 컨설팅을 전문으로 수행하는 기업입니다. 신규 화학물질
+                취급 공장 설립부터 기존 사업장의 설비 변경까지, 기업이 필요로 하는
+                모든 화학안전 서비스를 제공합니다.
+              </p>
+              <ul className="space-y-3 mb-8">
+                {[
+                  "화학사고예방관리계획서 작성 및 제출 대행",
+                  "취급시설 설치·정기·수시검사 수검 지원",
+                  "유해화학물질 영업허가 취득 전 과정 대행",
+                  "공정안전보고서(PSM) 작성 및 심사 대응",
+                  "유해위험방지계획서 작성 및 현장 확인 대응",
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-gold shrink-0 mt-0.5" />
+                    <span className="text-sm text-foreground/80">{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/contact">
+                <Button className="bg-navy hover:bg-navy-light text-white px-8 py-3 rounded-sm">
+                  상담 문의하기
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
             </div>
           </FadeInSection>
         </div>
@@ -384,7 +342,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section — link goes to /contact (page top) */}
       <section className="relative py-20 lg:py-28 overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -403,17 +361,17 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/contact">
-                <Button className="bg-gold hover:bg-gold-dark text-navy font-bold px-10 py-3.5 rounded-sm text-base">
+                <Button className="bg-gold hover:bg-gold-dark text-navy font-bold px-10 py-4 rounded-sm text-base sm:text-lg shadow-xl">
                   무료 상담 신청
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
               <a href={`tel:${companyInfo.phone}`}>
                 <Button
                   variant="outline"
-                  className="border-2 border-white/40 text-white hover:bg-white/10 px-10 py-3.5 rounded-sm text-base bg-transparent"
+                  className="border-2 border-white/40 text-white hover:bg-white/10 px-10 py-4 rounded-sm text-base sm:text-lg bg-transparent"
                 >
-                  <Phone className="w-4 h-4 mr-2" />
+                  <Phone className="w-5 h-5 mr-2" />
                   {companyInfo.phone}
                 </Button>
               </a>
