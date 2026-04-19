@@ -1,50 +1,66 @@
 /*
  * Design: "Authoritative Counsel" — Clean form with navy/gold accents
- * Sends inquiry via mailto link (static site)
+ * Sends inquiry via EmailJS (automatic email sending)
  */
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { companyInfo, services } from "@/lib/serviceData";
-import { Send, Phone, Mail } from "lucide-react";
+import { Send, Phone, Mail, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { sendContactEmail } from "@/lib/emailjs";
 
 interface ContactFormProps {
   variant?: "full" | "compact";
   className?: string;
+  preselectedService?: string;
 }
 
-export default function ContactForm({ variant = "full", className = "" }: ContactFormProps) {
+export default function ContactForm({ variant = "full", className = "", preselectedService = "" }: ContactFormProps) {
   const [form, setForm] = useState({
     name: "",
     company: "",
     phone: "",
     email: "",
-    service: "",
+    service: preselectedService,
     message: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.phone || !form.message) {
       toast.error("이름, 연락처, 문의 내용은 필수 입력 항목입니다.");
       return;
     }
 
-    const subject = encodeURIComponent(
-      `[홈페이지 상담문의] ${form.company || form.name} - ${form.service || "일반문의"}`
-    );
-    const body = encodeURIComponent(
-      `■ 상담 신청 정보\n\n` +
-        `이름: ${form.name}\n` +
-        `회사명: ${form.company}\n` +
-        `연락처: ${form.phone}\n` +
-        `이메일: ${form.email}\n` +
-        `관심 서비스: ${form.service}\n\n` +
-        `■ 문의 내용\n${form.message}`
-    );
+    setIsLoading(true);
+    try {
+      const success = await sendContactEmail({
+        from_name: form.name,
+        from_company: form.company,
+        from_phone: form.phone,
+        from_email: form.email,
+        service: form.service,
+        subject: `[홈페이지 상담문의] ${form.company || form.name} - ${form.service || "일반문의"}`,
+        message: form.message,
+      });
 
-    window.location.href = `mailto:${companyInfo.email}?subject=${subject}&body=${body}`;
-    toast.success("이메일 클라이언트가 열립니다. 전송을 완료해 주세요.");
+      if (success) {
+        toast.success("상담 신청이 완료되었습니다. 빠르게 연락드리겠습니다!");
+        setForm({
+          name: "",
+          company: "",
+          phone: "",
+          email: "",
+          service: preselectedService,
+          message: "",
+        });
+      } else {
+        toast.error("이메일 발송에 실패했습니다. 다시 시도해 주세요.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const inputClass =
@@ -68,6 +84,7 @@ export default function ContactForm({ variant = "full", className = "" }: Contac
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             className={inputClass}
             required
+            disabled={isLoading}
           />
           <input
             type="text"
@@ -75,6 +92,7 @@ export default function ContactForm({ variant = "full", className = "" }: Contac
             value={form.company}
             onChange={(e) => setForm({ ...form, company: e.target.value })}
             className={inputClass}
+            disabled={isLoading}
           />
           <input
             type="tel"
@@ -83,6 +101,7 @@ export default function ContactForm({ variant = "full", className = "" }: Contac
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
             className={inputClass}
             required
+            disabled={isLoading}
           />
           <textarea
             placeholder="문의 내용 *"
@@ -91,13 +110,24 @@ export default function ContactForm({ variant = "full", className = "" }: Contac
             onChange={(e) => setForm({ ...form, message: e.target.value })}
             className={inputClass + " resize-none"}
             required
+            disabled={isLoading}
           />
           <Button
             type="submit"
-            className="w-full bg-navy hover:bg-navy-light text-white py-3 rounded-sm font-medium"
+            disabled={isLoading}
+            className="w-full bg-navy hover:bg-navy-light text-white py-3 rounded-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Send className="w-4 h-4 mr-2" />
-            상담 신청하기
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                전송 중...
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4 mr-2" />
+                상담 신청하기
+              </>
+            )}
           </Button>
         </form>
         <div className="mt-4 pt-4 border-t border-border">
@@ -128,6 +158,7 @@ export default function ContactForm({ variant = "full", className = "" }: Contac
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className={inputClass}
               required
+              disabled={isLoading}
             />
           </div>
           <div>
@@ -140,6 +171,7 @@ export default function ContactForm({ variant = "full", className = "" }: Contac
               value={form.company}
               onChange={(e) => setForm({ ...form, company: e.target.value })}
               className={inputClass}
+              disabled={isLoading}
             />
           </div>
           <div>
@@ -153,6 +185,7 @@ export default function ContactForm({ variant = "full", className = "" }: Contac
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               className={inputClass}
               required
+              disabled={isLoading}
             />
           </div>
           <div>
@@ -165,6 +198,7 @@ export default function ContactForm({ variant = "full", className = "" }: Contac
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               className={inputClass}
+              disabled={isLoading}
             />
           </div>
         </div>
@@ -177,6 +211,7 @@ export default function ContactForm({ variant = "full", className = "" }: Contac
             value={form.service}
             onChange={(e) => setForm({ ...form, service: e.target.value })}
             className={inputClass}
+            disabled={isLoading}
           >
             <option value="">서비스를 선택해 주세요</option>
             {services.map((s) => (
@@ -199,16 +234,27 @@ export default function ContactForm({ variant = "full", className = "" }: Contac
             onChange={(e) => setForm({ ...form, message: e.target.value })}
             className={inputClass + " resize-none"}
             required
+            disabled={isLoading}
           />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4">
           <Button
             type="submit"
-            className="flex-1 bg-navy hover:bg-navy-light text-white py-3 rounded-sm font-medium text-base"
+            disabled={isLoading}
+            className="flex-1 bg-navy hover:bg-navy-light text-white py-3 rounded-sm font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Send className="w-4 h-4 mr-2" />
-            상담 신청하기
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                전송 중...
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4 mr-2" />
+                상담 신청하기
+              </>
+            )}
           </Button>
           <a
             href={`tel:${companyInfo.phone}`}
