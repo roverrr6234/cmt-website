@@ -62,8 +62,11 @@ export async function sendContactEmail(data: ContactFormData): Promise<SendResul
     
     let errorMessage = '이메일 발송에 실패했습니다.';
     
+    // 에러 객체 상세 분석
     if (error instanceof Error) {
       errorMessage = error.message;
+      console.error('Error message:', error.message);
+      console.error('Error name:', error.name);
       
       // EmailJS 특정 에러 처리
       if (error.message.includes('Invalid Service ID')) {
@@ -74,8 +77,29 @@ export async function sendContactEmail(data: ContactFormData): Promise<SendResul
         errorMessage = '이메일 인증 오류입니다. 관리자에게 문의해 주세요.';
       } else if (error.message.includes('Network')) {
         errorMessage = '네트워크 연결을 확인해 주세요.';
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage = '네트워크 연결을 확인해 주세요. 잠시 후 다시 시도해 주세요.';
       }
+    } else if (typeof error === 'object' && error !== null) {
+      // EmailJS가 반환하는 응답 객체 처리
+      const errorObj = error as any;
+      console.error('Error object keys:', Object.keys(errorObj));
+      console.error('Error object:', JSON.stringify(errorObj));
+      
+      if (errorObj.status === 0) {
+        errorMessage = '네트워크 연결을 확인해 주세요.';
+      } else if (errorObj.text) {
+        errorMessage = `이메일 발송 실패: ${errorObj.text}`;
+      } else if (errorObj.message) {
+        errorMessage = errorObj.message;
+      } else {
+        errorMessage = '이메일 발송 중 오류가 발생했습니다. 다시 시도해 주세요.';
+      }
+    } else if (typeof error === 'string') {
+      errorMessage = error;
     }
+    
+    console.error('Final error message:', errorMessage);
     
     return {
       success: false,
