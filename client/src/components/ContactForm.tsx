@@ -36,12 +36,11 @@ export default function ContactForm({ variant = "full", className = "", preselec
     setIsLoading(true);
     try {
       const result: SendResult = await sendContactEmail({
-        from_name: form.name,
+        name: form.name,
         from_company: form.company,
         from_phone: form.phone,
         from_email: form.email,
-        service: form.service,
-        subject: `[홈페이지 상담문의] ${form.company || form.name} - ${form.service || "일반문의"}`,
+        service_type: form.service,
         message: form.message,
       });
 
@@ -259,11 +258,11 @@ export default function ContactForm({ variant = "full", className = "", preselec
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Button
             type="submit"
             disabled={isLoading}
-            className="flex-1 bg-navy hover:bg-navy-light text-white py-3 rounded-sm font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-navy hover:bg-navy-light text-white py-3 rounded-sm font-medium text-base disabled:opacity-50 disabled:cursor-not-allowed h-full"
           >
             {isLoading ? (
               <>
@@ -277,7 +276,7 @@ export default function ContactForm({ variant = "full", className = "", preselec
               </>
             )}
           </Button>
-          <div className="flex-1 flex gap-2">
+          <div className="flex gap-2 h-full">
             <a
               href={`tel:${companyInfo.phone}`}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-navy text-navy font-medium rounded-sm hover:bg-navy hover:text-white transition-colors text-base"
