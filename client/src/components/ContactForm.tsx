@@ -5,9 +5,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { companyInfo, services } from "@/lib/serviceData";
-import { Send, Phone, Mail, Loader2 } from "lucide-react";
+import { Send, Phone, Mail, Loader2, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
-import { sendContactEmail } from "@/lib/emailjs";
+import { sendContactEmail, type SendResult } from "@/lib/emailjs";
 
 interface ContactFormProps {
   variant?: "full" | "compact";
@@ -35,7 +35,7 @@ export default function ContactForm({ variant = "full", className = "", preselec
 
     setIsLoading(true);
     try {
-      const success = await sendContactEmail({
+      const result: SendResult = await sendContactEmail({
         from_name: form.name,
         from_company: form.company,
         from_phone: form.phone,
@@ -45,8 +45,8 @@ export default function ContactForm({ variant = "full", className = "", preselec
         message: form.message,
       });
 
-      if (success) {
-        toast.success("상담 신청이 완료되었습니다. 빠르게 연락드리겠습니다!");
+      if (result.success) {
+        toast.success(result.message);
         setForm({
           name: "",
           company: "",
@@ -56,11 +56,19 @@ export default function ContactForm({ variant = "full", className = "", preselec
           message: "",
         });
       } else {
-        toast.error("이메일 발송에 실패했습니다. 다시 시도해 주세요.");
+        toast.error(result.message);
       }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      toast.error("요청 처리 중 오류가 발생했습니다. 다시 시도해 주세요.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCopyPhone = () => {
+    navigator.clipboard.writeText(companyInfo.phone);
+    toast.success("전화번호가 복사되었습니다.");
   };
 
   const inputClass =
@@ -131,13 +139,26 @@ export default function ContactForm({ variant = "full", className = "", preselec
           </Button>
         </form>
         <div className="mt-4 pt-4 border-t border-border">
-          <a
-            href={`tel:${companyInfo.phone}`}
-            className="flex items-center gap-2 text-navy font-bold text-sm hover:text-gold transition-colors"
-          >
-            <Phone className="w-4 h-4 text-gold" />
-            전화 상담: {companyInfo.phone}
-          </a>
+          <div className="flex items-center gap-2 justify-between">
+            <span className="text-navy font-bold text-sm">전화 상담</span>
+            <div className="flex items-center gap-2">
+              <a
+                href={`tel:${companyInfo.phone}`}
+                className="flex items-center gap-1 text-navy font-bold text-sm hover:text-gold transition-colors"
+              >
+                <Phone className="w-4 h-4 text-gold" />
+                {companyInfo.phone}
+              </a>
+              <button
+                type="button"
+                onClick={handleCopyPhone}
+                className="p-1 hover:bg-gold/10 rounded transition-colors"
+                title="전화번호 복사"
+              >
+                <Copy className="w-4 h-4 text-gold" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -256,13 +277,23 @@ export default function ContactForm({ variant = "full", className = "", preselec
               </>
             )}
           </Button>
-          <a
-            href={`tel:${companyInfo.phone}`}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-navy text-navy font-medium rounded-sm hover:bg-navy hover:text-white transition-colors text-base"
-          >
-            <Phone className="w-4 h-4" />
-            전화 상담
-          </a>
+          <div className="flex-1 flex gap-2">
+            <a
+              href={`tel:${companyInfo.phone}`}
+              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-navy text-navy font-medium rounded-sm hover:bg-navy hover:text-white transition-colors text-base"
+            >
+              <Phone className="w-4 h-4" />
+              전화 상담
+            </a>
+            <button
+              type="button"
+              onClick={handleCopyPhone}
+              className="px-4 py-3 border-2 border-navy text-navy font-medium rounded-sm hover:bg-navy hover:text-white transition-colors flex items-center justify-center gap-2"
+              title="전화번호 복사"
+            >
+              <Copy className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </form>
     </div>
