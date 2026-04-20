@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import ServiceDetail from "./pages/ServiceDetail";
 import Contact from "./pages/Contact";
 import Notices from "./pages/Notices";
+import RSSFeed from "./pages/RSSFeed";
 
 function Router() {
   return (
@@ -16,6 +17,8 @@ function Router() {
       <Route path="/service/:slug" component={ServiceDetail} />
       <Route path="/contact" component={Contact} />
       <Route path="/notices" component={Notices} />
+      <Route path="/rss" component={RSSFeed} />
+      <Route path="/rss.xml" component={RSSFeed} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

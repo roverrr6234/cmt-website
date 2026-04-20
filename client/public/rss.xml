@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>화학물질관리기술 - 알림마당</title>
+    <link>https://www.cmtbusan.kr/notices</link>
+    <description>화학물질관리법과 산업안전보건법에 관련된 최신 뉴스, 법령 개정사항, 공지사항을 제공합니다.</description>
+    <language>ko-kr</language>
+    <lastBuildDate>2026-04-20T00:00:00Z</lastBuildDate>
+    <ttl>3600</ttl>
+    <image>
+      <url>https://www.cmtbusan.kr/logo.png</url>
+      <title>화학물질관리기술</title>
+      <link>https://www.cmtbusan.kr</link>
+    </image>
+    
+    <item>
+      <title>화학물질관리법 시행규칙 일부개정령(안) 입법예고</title>
+      <link>https://www.cmtbusan.kr/notices</link>
+      <guid>fallback-1</guid>
+      <category>법령개정</category>
+      <pubDate>Mon, 15 Apr 2026 00:00:00 +0900</pubDate>
+      <description>환경부에서 화학물질관리법 시행규칙 일부개정령(안)을 입법예고하였습니다. 주요 개정 내용은 유해화학물질 취급시설의 검사기준 강화 및 안전진단 주기 조정입니다.</description>
+    </item>
+    
+    <item>
+      <title>산업안전보건법 시행령 개정안 공포 (2026.3.1 시행)</title>
+      <link>https://www.cmtbusan.kr/notices</link>
+      <guid>fallback-2</guid>
+      <category>법령개정</category>
+      <pubDate>Fri, 28 Mar 2026 00:00:00 +0900</pubDate>
+      <description>공정안전보고서(PSM) 대상 물질 규정량 조정 및 이행상태 평가 기준 변경 사항이 포함된 산업안전보건법 시행령 개정안이 공포되었습니다.</description>
+    </item>
+    
+    <item>
+      <title>2026년 상반기 무료 컨설팅 상담 안내</title>
+      <link>https://www.cmtbusan.kr/notices</link>
+      <guid>fallback-3</guid>
+      <category>공지사항</category>
+      <pubDate>Sun, 15 Mar 2026 00:00:00 +0900</pubDate>
+      <description>화학물질관리기술에서 2026년 상반기 무료 컨설팅 상담을 진행합니다. 화학사고예방관리계획서, 설치검사, PSM 등 전 분야 상담이 가능합니다.</description>
+    </item>
+    
+  </channel>
+</rss>
