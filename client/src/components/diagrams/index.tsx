@@ -342,7 +342,7 @@ export function Diagram5_FacilityTypes() {
   const facilities = [
     { name: "제조·사용·저장시설", icon: Factory, desc: "화학물질 제조, 사용, 저장" },
     { name: "보관시설", icon: Warehouse, desc: "화학물질 보관 관리" },
-    { name: "사회배관시설", icon: Recycle, desc: "사업장 간 배관 연결" },
+    { name: "사회배관시설", icon: Recycle, desc: "사업장 외 이송배관" },
     { name: "운반시설", icon: Package, desc: "지게차 등의 도움" },
     { name: "운송시설", icon: Truck, desc: "화학물질 운송" },
   ];
