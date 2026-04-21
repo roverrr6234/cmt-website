@@ -19,7 +19,6 @@ import {
   Download,
   RefreshCw,
   ChevronDown,
-  Rss,
 } from "lucide-react";
 import {
   sanityClient,
@@ -253,23 +252,11 @@ export default function Notices() {
               {cat}
             </button>
           ))}
-          <span className="ml-auto text-sm text-gray-500 flex items-center gap-3">
-            <span>
-              총 {filteredNotices.length}건
-              {useFallback && (
-                <span className="text-amber-600 ml-1">(오프라인)</span>
-              )}
-            </span>
-            <a
-              href="/rss.xml"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-orange-600 hover:text-orange-700 font-medium transition-colors"
-              title="RSS 피드 구독"
-            >
-              <Rss className="w-4 h-4" />
-              <span className="text-xs">RSS</span>
-            </a>
+          <span className="ml-auto text-sm text-gray-500">
+            총 {filteredNotices.length}건
+            {useFallback && (
+              <span className="text-amber-600 ml-1">(오프라인)</span>
+            )}
           </span>
         </div>
 

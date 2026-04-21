@@ -17,18 +17,19 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
           {/* Company info */}
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gold rounded-sm flex items-center justify-center">
-                <span className="text-navy font-bold text-lg font-serif">CKT</span>
-              </div>
-              <div>
-                <p className="font-bold text-lg font-serif">화학물질관리기술</p>
-              </div>
+            <div className="mb-6">
+              <img
+                src="/manus-storage/스크린샷2026-04-21114633_2afa81d6.png"
+                alt="화학물질관리기술 로고"
+                className="h-20 w-auto object-contain mb-4"
+              />
             </div>
-            <p className="text-white/60 text-sm leading-relaxed mb-6">
-              20년 이상의 EHS 전문 경력을 바탕으로 화학사고 예방부터 인허가 취득까지,
-              귀사의 화학안전 파트너로서 함께합니다.
-            </p>
+            <div className="space-y-2 text-sm text-white/80 mb-6">
+              <p><span className="font-semibold">상호명:</span> 화학물질관리기술(CMT)</p>
+              <p><span className="font-semibold">대표자:</span> 전규탁</p>
+              <p><span className="font-semibold">사업자등록번호:</span> 785-17-02316</p>
+              <p><span className="font-semibold">주소:</span> 부산광역시 영도구 꿈나무길 261</p>
+            </div>
             <div className="gold-line mb-4" />
             <p className="text-gold text-sm font-medium">
               "{companyInfo.slogan}"
@@ -93,30 +94,16 @@ export default function Footer() {
             <h3 className="text-gold font-semibold text-sm uppercase tracking-wider mb-6 font-sans">
               연락처
             </h3>
-            <ul className="space-y-4">
-              <li>
-                <a
-                  href={`tel:${companyInfo.phone}`}
-                  className="flex items-start gap-3 text-white/70 hover:text-gold transition-colors"
-                >
-                  <Phone className="w-4 h-4 mt-0.5 text-gold shrink-0" />
-                  <span className="text-sm">{companyInfo.phone}</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href={`mailto:${companyInfo.email}`}
-                  className="flex items-start gap-3 text-white/70 hover:text-gold transition-colors"
-                >
-                  <Mail className="w-4 h-4 mt-0.5 text-gold shrink-0" />
-                  <span className="text-sm">{companyInfo.email}</span>
-                </a>
-              </li>
-              <li className="flex items-start gap-3 text-white/70">
-                <MapPin className="w-4 h-4 mt-0.5 text-gold shrink-0" />
-                <span className="text-sm">{companyInfo.address}</span>
-              </li>
-            </ul>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-gold shrink-0" />
+                <span className="text-white/80">Tel: {companyInfo.phone}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-gold shrink-0" />
+                <span className="text-white/80">E-mail: {companyInfo.email}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

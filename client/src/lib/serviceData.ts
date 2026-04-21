@@ -203,7 +203,7 @@ const preventionPlan: ServiceData = {
       image: {
         src: images.preventionCompare,
         alt: "화학사고예방관리계획서 구성요소 1군 vs 2군 비교",
-        caption: "O: 필수 포함 (Required), X: 해당 없음 (N/A)",
+        caption: "",
       },
     },
     {
@@ -236,7 +236,6 @@ const preventionPlan: ServiceData = {
           { label: "  나. 주민보호 및 대피계획", values: ["X", "O"] },
           { label: "  다. 지역사회 고지계획", values: ["X", "O"] },
         ],
-        footnote: "O: 필수 포함 (Required), X: 해당 없음 (N/A)",
       },
     },
     {
@@ -335,7 +334,7 @@ const installationInspection: ServiceData = {
       image: {
         src: images.inspectionFacilityTypes,
         alt: "유해화학물질 취급시설의 종류",
-        caption: "제조·사용·저장시설, 보관시설, 처리시설, 운반시설, 운송시설",
+        caption: "제조·사용·저장시설, 보관시설, 사회배관시설, 운반시설, 운송시설",
       },
     },
     {

@@ -49,7 +49,7 @@ export default function Header() {
             />
             <div className="hidden sm:block leading-tight">
               <p className="text-navy text-xs lg:text-[13px] font-semibold tracking-wide">
-                Chemical Management
+                Chemicals Management
               </p>
               <p className="text-navy text-xs lg:text-[13px] font-semibold tracking-wide">
                 Technology
