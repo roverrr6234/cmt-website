@@ -2,6 +2,7 @@
  * 11 Diagram Components replacing [변경1]~[변경11] images
  * Design: Deep Navy & White theme, CSS-based flowcharts and tables
  */
+import React from "react";
 import { CheckCircle2, XCircle, ArrowDown, ArrowRight, Factory, Truck, Package, Warehouse, Recycle, FlaskConical } from "lucide-react";
 
 /* ── Shared styles ── */
@@ -231,9 +232,9 @@ export function Diagram3_Compare() {
             </tr>
           </thead>
           <tbody>
-            {data.map((cat) => (
-              <>
-                <tr key={cat.category} className="bg-navy/5">
+            {data.map((cat, i) => (
+              <React.Fragment key={cat.category}>
+                <tr className="bg-navy/5">
                   <td colSpan={3} className="px-4 py-3 text-navy font-bold text-sm border-t border-border">
                     {cat.category}
                   </td>
@@ -257,7 +258,7 @@ export function Diagram3_Compare() {
                     </td>
                   </tr>
                 ))}
-              </>
+              </React.Fragment>
             ))}
           </tbody>
         </table>
