@@ -214,7 +214,7 @@ export function Diagram3_Compare() {
     { category: "6. 외부 비상대응계획", items: [
       { label: "가. 지역사회와의 공조계획", c2: false, c1: true },
       { label: "나. 주민보호 및 대피계획", c2: false, c1: true },
-      { label: "다. 지역사회 고지계획", c2: true, c1: true },
+      { label: "다. 지역사회 고지계획", c2: false, c1: true },
     ]},
   ];
 
@@ -262,7 +262,7 @@ export function Diagram3_Compare() {
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-foreground/50 text-center">O: 필수 포함 (Required), X: 해당 없음 (N/A)</p>
+
     </div>
   );
 }
@@ -342,7 +342,7 @@ export function Diagram5_FacilityTypes() {
   const facilities = [
     { name: "제조·사용·저장시설", icon: Factory, desc: "화학물질 제조, 사용, 저장" },
     { name: "보관시설", icon: Warehouse, desc: "화학물질 보관 관리" },
-    { name: "처리시설", icon: Recycle, desc: "필터 및 등상 처리" },
+    { name: "사회배관시설", icon: Recycle, desc: "사업장 간 배관 연결" },
     { name: "운반시설", icon: Package, desc: "지게차 등의 도움" },
     { name: "운송시설", icon: Truck, desc: "화학물질 운송" },
   ];
@@ -446,7 +446,7 @@ export function Diagram6_InspectionSchedule() {
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-foreground/50 text-center">※ 기억적 없는 포함 수머라지자가 절영하는 경우에터 가능</p>
+
     </div>
   );
 }

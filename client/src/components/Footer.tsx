@@ -4,7 +4,7 @@
  * Blog link → external Naver blog (target="_blank")
  */
 import { Link } from "wouter";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail } from "lucide-react";
 import { companyInfo, services } from "@/lib/serviceData";
 
 const BLOG_URL = "https://blog.naver.com/ckt9054";
@@ -15,28 +15,28 @@ export default function Footer() {
       {/* Main footer */}
       <div className="container section-padding">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
-          {/* Company info */}
-          <div className="lg:col-span-1">
-            <div className="mb-6">
-              <img
-                src="/manus-storage/스크린샷2026-04-21114633_2afa81d6.png"
-                alt="화학물질관리기술 로고"
-                className="h-20 w-auto object-contain mb-4"
-              />
-            </div>
-            <div className="space-y-2 text-sm text-white/80 mb-6">
-              <p><span className="font-semibold">상호명:</span> 화학물질관리기술(CMT)</p>
-              <p><span className="font-semibold">대표자:</span> 전규탁</p>
-              <p><span className="font-semibold">사업자등록번호:</span> 785-17-02316</p>
-              <p><span className="font-semibold">주소:</span> 부산광역시 영도구 꿈나무길 261</p>
-            </div>
-            <div className="gold-line mb-4" />
-            <p className="text-gold text-sm font-medium">
-              "{companyInfo.slogan}"
-            </p>
+          {/* 사업자 정보 */}
+          <div>
+            <h3 className="text-gold font-semibold text-sm uppercase tracking-wider mb-6 font-sans">
+              사업자 정보
+            </h3>
+            <ul className="space-y-3">
+              <li className="text-white/70 text-sm">
+                <span className="text-white/90 font-medium">상호명:</span> 화학물질관리기술(CMT)
+              </li>
+              <li className="text-white/70 text-sm">
+                <span className="text-white/90 font-medium">대표자:</span> 전규탁
+              </li>
+              <li className="text-white/70 text-sm">
+                <span className="text-white/90 font-medium">사업자등록번호:</span> 785-17-02316
+              </li>
+              <li className="text-white/70 text-sm">
+                <span className="text-white/90 font-medium">주소:</span> 부산광역시 영도구 꿈나무길 261
+              </li>
+            </ul>
           </div>
 
-          {/* Services */}
+          {/* 주요 업무 */}
           <div>
             <h3 className="text-gold font-semibold text-sm uppercase tracking-wider mb-6 font-sans">
               주요 업무
@@ -55,7 +55,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Quick links */}
+          {/* 바로가기 */}
           <div>
             <h3 className="text-gold font-semibold text-sm uppercase tracking-wider mb-6 font-sans">
               바로가기
@@ -89,21 +89,31 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* 연락처 */}
           <div>
             <h3 className="text-gold font-semibold text-sm uppercase tracking-wider mb-6 font-sans">
               연락처
             </h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-gold shrink-0" />
-                <span className="text-white/80">Tel: {companyInfo.phone}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-gold shrink-0" />
-                <span className="text-white/80">E-mail: {companyInfo.email}</span>
-              </div>
-            </div>
+            <ul className="space-y-3">
+              <li>
+                <a
+                  href={`tel:${companyInfo.phone}`}
+                  className="flex items-start gap-3 text-white/70 hover:text-gold transition-colors"
+                >
+                  <Phone className="w-4 h-4 mt-0.5 text-gold shrink-0" />
+                  <span className="text-sm">Tel: {companyInfo.phone}</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`mailto:${companyInfo.email}`}
+                  className="flex items-start gap-3 text-white/70 hover:text-gold transition-colors"
+                >
+                  <Mail className="w-4 h-4 mt-0.5 text-gold shrink-0" />
+                  <span className="text-sm">E-mail: {companyInfo.email}</span>
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
