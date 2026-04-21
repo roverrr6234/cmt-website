@@ -31,7 +31,7 @@ export default function Footer() {
                 <span className="text-white/90 font-medium">사업자등록번호:</span> 785-17-02316
               </li>
               <li className="text-white/70 text-sm">
-                <span className="text-white/90 font-medium">주소:</span> 부산광역시 영도구 꿈나무길 261
+                <span className="text-white/90 font-medium">주소:</span> 부산광역시 영도구 꿈나무길 261 (2층)
               </li>
             </ul>
           </div>
