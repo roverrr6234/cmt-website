@@ -1,14 +1,14 @@
 /**
  * Design: "Authoritative Counsel" — Clean form with navy/gold accents
- * Sends inquiry via EmailJS (automatic email sending)
- * Security: Input validation, rate limiting, XSS prevention
+ * Sends inquiry via Vercel API Route (backend email sending)
+ * Security: Input validation, Rate limiting, XSS prevention with DOMPurify
  */
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { companyInfo, services } from "@/lib/serviceData";
-import { Send, Phone, Mail, Loader2, Copy, Check } from "lucide-react";
+import { Send, Phone, Mail, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { sendContactEmail, type SendResult } from "@/lib/emailjs";
+import DOMPurify from "dompurify";
 
 interface ContactFormProps {
   variant?: "full" | "compact";
@@ -20,9 +20,6 @@ interface ContactFormProps {
 const validateInput = (value: string, maxLength: number = 1000): boolean => {
   if (!value || value.trim().length === 0) return false;
   if (value.length > maxLength) return false;
-  // XSS 방지: 위험한 문자 검사
-  const xssPattern = /<script|javascript:|onerror|onload|onclick/gi;
-  if (xssPattern.test(value)) return false;
   return true;
 };
 
@@ -39,7 +36,7 @@ const validatePhone = (phone: string): boolean => {
   return phonePattern.test(phone) && phone.length >= 10 && phone.length <= 20;
 };
 
-// Rate Limit 저장소 (메모리 기반)
+// Rate Limit 저장소 (클라이언트 사이드, 보조 역할)
 const submitAttempts = new Map<string, number[]>();
 const RATE_LIMIT_WINDOW = 60000; // 1분
 const MAX_ATTEMPTS = 3; // 1분에 3회 제한
@@ -47,25 +44,28 @@ const MAX_ATTEMPTS = 3; // 1분에 3회 제한
 const checkRateLimit = (): boolean => {
   const now = Date.now();
   const key = "contact-form";
-  
+
   if (!submitAttempts.has(key)) {
     submitAttempts.set(key, []);
   }
-  
+
   const attempts = submitAttempts.get(key)!;
-  // 시간 윈도우 밖의 시도 제거
-  const recentAttempts = attempts.filter(t => now - t < RATE_LIMIT_WINDOW);
-  
+  const recentAttempts = attempts.filter((t) => now - t < RATE_LIMIT_WINDOW);
+
   if (recentAttempts.length >= MAX_ATTEMPTS) {
     return false;
   }
-  
+
   recentAttempts.push(now);
   submitAttempts.set(key, recentAttempts);
   return true;
 };
 
-export default function ContactForm({ variant = "full", className = "", preselectedService = "" }: ContactFormProps) {
+export default function ContactForm({
+  variant = "full",
+  className = "",
+  preselectedService = "",
+}: ContactFormProps) {
   const [form, setForm] = useState({
     name: "",
     company: "",
@@ -81,12 +81,11 @@ export default function ContactForm({ variant = "full", className = "", preselec
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Rate Limit 검사
+    // Rate Limit 검사 (클라이언트 사이드, 보조)
     if (!checkRateLimit()) {
       setRateLimitError(true);
       toast.error("요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.");
-      
-      // 60초 후 에러 메시지 초기화
+
       if (rateLimitTimerRef.current) clearTimeout(rateLimitTimerRef.current);
       rateLimitTimerRef.current = setTimeout(() => {
         setRateLimitError(false);
@@ -122,17 +121,26 @@ export default function ContactForm({ variant = "full", className = "", preselec
 
     setIsLoading(true);
     try {
-      const result: SendResult = await sendContactEmail({
-        name: form.name.trim(),
-        from_company: form.company.trim(),
-        from_phone: form.phone.trim(),
-        from_email: form.email.trim(),
-        service_type: form.service,
-        message: form.message.trim(),
+      // Vercel API Route로 요청 전송
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: form.name.trim(),
+          from_company: form.company.trim(),
+          from_phone: form.phone.trim(),
+          from_email: form.email.trim(),
+          service_type: form.service,
+          message: form.message.trim(),
+        }),
       });
 
-      if (result.success) {
-        toast.success(result.message);
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success(data.message || "상담 신청이 완료되었습니다.");
         setForm({
           name: "",
           company: "",
@@ -141,13 +149,22 @@ export default function ContactForm({ variant = "full", className = "", preselec
           service: preselectedService,
           message: "",
         });
+      } else if (response.status === 429) {
+        // 서버 사이드 Rate Limit
+        setRateLimitError(true);
+        toast.error(data.message || "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.");
+
+        if (rateLimitTimerRef.current) clearTimeout(rateLimitTimerRef.current);
+        rateLimitTimerRef.current = setTimeout(() => {
+          setRateLimitError(false);
+        }, (data.retryAfter || 60) * 1000);
       } else {
-        toast.error(result.message);
+        toast.error(data.message || "요청 처리 중 오류가 발생했습니다.");
       }
     } catch (error) {
       // 프로덕션 환경에서는 에러 로깅 미수행
-      if (process.env.NODE_ENV !== 'production') {
-        console.error('[DEV] Form submission error:', error);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[DEV] Form submission error:", error);
       }
       toast.error("요청 처리 중 오류가 발생했습니다. 다시 시도해 주세요.");
     } finally {
@@ -178,7 +195,9 @@ export default function ContactForm({ variant = "full", className = "", preselec
             type="text"
             placeholder="이름 *"
             value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value.slice(0, 100) })}
+            onChange={(e) =>
+              setForm({ ...form, name: e.target.value.slice(0, 100) })
+            }
             className={inputClass}
             required
             disabled={isLoading || rateLimitError}
@@ -188,7 +207,9 @@ export default function ContactForm({ variant = "full", className = "", preselec
             type="text"
             placeholder="회사명"
             value={form.company}
-            onChange={(e) => setForm({ ...form, company: e.target.value.slice(0, 100) })}
+            onChange={(e) =>
+              setForm({ ...form, company: e.target.value.slice(0, 100) })
+            }
             className={inputClass}
             disabled={isLoading || rateLimitError}
             maxLength={100}
@@ -197,7 +218,9 @@ export default function ContactForm({ variant = "full", className = "", preselec
             type="tel"
             placeholder="연락처 *"
             value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value.slice(0, 20) })}
+            onChange={(e) =>
+              setForm({ ...form, phone: e.target.value.slice(0, 20) })
+            }
             className={inputClass}
             required
             disabled={isLoading || rateLimitError}
@@ -207,7 +230,9 @@ export default function ContactForm({ variant = "full", className = "", preselec
             type="email"
             placeholder="이메일"
             value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value.slice(0, 254) })}
+            onChange={(e) =>
+              setForm({ ...form, email: e.target.value.slice(0, 254) })
+            }
             className={inputClass}
             disabled={isLoading || rateLimitError}
             maxLength={254}
@@ -229,7 +254,9 @@ export default function ContactForm({ variant = "full", className = "", preselec
             placeholder="문의 내용 *"
             rows={3}
             value={form.message}
-            onChange={(e) => setForm({ ...form, message: e.target.value.slice(0, 5000) })}
+            onChange={(e) =>
+              setForm({ ...form, message: e.target.value.slice(0, 5000) })
+            }
             className={inputClass + " resize-none"}
             required
             disabled={isLoading || rateLimitError}
@@ -273,7 +300,9 @@ export default function ContactForm({ variant = "full", className = "", preselec
           <input
             type="text"
             value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value.slice(0, 100) })}
+            onChange={(e) =>
+              setForm({ ...form, name: e.target.value.slice(0, 100) })
+            }
             className={inputClass}
             required
             disabled={isLoading || rateLimitError}
@@ -287,7 +316,9 @@ export default function ContactForm({ variant = "full", className = "", preselec
           <input
             type="text"
             value={form.company}
-            onChange={(e) => setForm({ ...form, company: e.target.value.slice(0, 100) })}
+            onChange={(e) =>
+              setForm({ ...form, company: e.target.value.slice(0, 100) })
+            }
             className={inputClass}
             disabled={isLoading || rateLimitError}
             maxLength={100}
@@ -303,7 +334,9 @@ export default function ContactForm({ variant = "full", className = "", preselec
           <input
             type="tel"
             value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value.slice(0, 20) })}
+            onChange={(e) =>
+              setForm({ ...form, phone: e.target.value.slice(0, 20) })
+            }
             className={inputClass}
             required
             disabled={isLoading || rateLimitError}
@@ -317,7 +350,9 @@ export default function ContactForm({ variant = "full", className = "", preselec
           <input
             type="email"
             value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value.slice(0, 254) })}
+            onChange={(e) =>
+              setForm({ ...form, email: e.target.value.slice(0, 254) })
+            }
             className={inputClass}
             disabled={isLoading || rateLimitError}
             maxLength={254}
@@ -350,7 +385,9 @@ export default function ContactForm({ variant = "full", className = "", preselec
         </label>
         <textarea
           value={form.message}
-          onChange={(e) => setForm({ ...form, message: e.target.value.slice(0, 5000) })}
+          onChange={(e) =>
+            setForm({ ...form, message: e.target.value.slice(0, 5000) })
+          }
           className={inputClass + " resize-none"}
           rows={6}
           required

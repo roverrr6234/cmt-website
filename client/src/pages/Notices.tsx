@@ -8,6 +8,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PortableText } from "@portabletext/react";
+import DOMPurify from "dompurify";
 import {
   FileText,
   Pin,
@@ -292,7 +293,7 @@ export default function Notices() {
                       </span>
                     </div>
                     <h3 className="font-semibold text-[#0a1628] text-left">
-                      {notice.title}
+                      {DOMPurify.sanitize(notice.title, { ALLOWED_TAGS: [] })}
                     </h3>
                     <p className="text-sm text-gray-500 mt-1">
                       {formatDate(notice.publishedAt)}
@@ -308,7 +309,7 @@ export default function Notices() {
                 {/* Expanded Content */}
                 {expandedId === notice._id && (
                   <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                    <p className="text-sm text-gray-700 mb-4">{notice.excerpt}</p>
+                    <p className="text-sm text-gray-700 mb-4">{DOMPurify.sanitize(notice.excerpt, { ALLOWED_TAGS: [] })}</p>
 
                     {notice.body && (
                       <div className="prose prose-sm max-w-none mb-4">
