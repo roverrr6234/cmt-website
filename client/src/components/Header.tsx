@@ -9,7 +9,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Phone, Menu, X, ChevronDown, Bell } from "lucide-react";
-import { companyInfo, services } from "@/lib/serviceData";
+import { sanityClient, HEADER_QUERY, SERVICES_QUERY, COMPANY_INFO_QUERY, SanityHeader, SanityService, SanityCompanyInfo } from "@/lib/sanity";
 import { images } from "@/lib/images";
 
 const BLOG_URL = "https://blog.naver.com/ckt9054";
@@ -19,6 +19,30 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [serviceDropdown, setServiceDropdown] = useState(false);
   const [location] = useLocation();
+  const [header, setHeader] = useState<SanityHeader | null>(null);
+  const [services, setServices] = useState<SanityService[]>([]);
+  const [companyInfo, setCompanyInfo] = useState<SanityCompanyInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [headerData, servicesData, companyData] = await Promise.all([
+          sanityClient.fetch(HEADER_QUERY),
+          sanityClient.fetch(SERVICES_QUERY),
+          sanityClient.fetch(COMPANY_INFO_QUERY),
+        ]);
+        setHeader(headerData);
+        setServices(servicesData);
+        setCompanyInfo(companyData);
+      } catch (err) {
+        console.error("Failed to fetch header data:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -30,6 +54,10 @@ export default function Header() {
     setMobileOpen(false);
     setServiceDropdown(false);
   }, [location]);
+
+  if (loading || !header || !companyInfo) {
+    return null;
+  }
 
   return (
     <>
@@ -49,10 +77,10 @@ export default function Header() {
             />
             <div className="hidden sm:block leading-tight">
               <p className="text-navy text-xs lg:text-[13px] font-semibold tracking-wide">
-                Chemicals Management
+                {header.logoTextEng.split(" ")[0]}
               </p>
               <p className="text-navy text-xs lg:text-[13px] font-semibold tracking-wide">
-                Technology
+                {header.logoTextEng.split(" ")[1] || "Technology"}
               </p>
             </div>
           </Link>
@@ -108,11 +136,11 @@ export default function Header() {
               aria-label="5대 핵심 서비스"
             >
               {services.map((s, i) => {
-                const isActive = location === `/service/${s.slug}`;
+                const isActive = location === `/service/${s.slug.current}`;
                 return (
                   <Link
-                    key={s.id}
-                    href={`/service/${s.slug}`}
+                    key={s._id}
+                    href={`/service/${s.slug.current}`}
                     className={`relative flex items-center gap-1.5 px-2.5 sm:px-3 lg:px-4 py-3 text-[11px] sm:text-[12px] lg:text-[13px] font-medium whitespace-nowrap transition-colors shrink-0 ${
                       isActive
                         ? "text-gold"
@@ -168,10 +196,10 @@ export default function Header() {
                   <div className="ml-4 space-y-0.5 mt-1">
                     {services.map((s) => (
                       <Link
-                        key={s.id}
-                        href={`/service/${s.slug}`}
+                        key={s._id}
+                        href={`/service/${s.slug.current}`}
                         className={`block px-5 py-2.5 text-sm rounded-sm border-l-2 transition-colors ${
-                          location === `/service/${s.slug}`
+                          location === `/service/${s.slug.current}`
                             ? "text-gold border-gold bg-navy/5"
                             : "text-navy/60 border-gray-200 hover:text-gold hover:border-gold hover:bg-navy/5"
                         }`}

@@ -22,7 +22,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import StickyPhone from "@/components/StickyPhone";
-import { companyInfo, services } from "@/lib/serviceData";
+import { sanityClient, HOME_PAGE_QUERY, SERVICES_QUERY, COMPANY_INFO_QUERY, SanityHomePage, SanityService, SanityCompanyInfo, sanityImageUrl } from "@/lib/sanity";
 import { images } from "@/lib/images";
 
 function CountUp({ end, suffix = "" }: { end: number; suffix?: string }) {
@@ -127,6 +127,66 @@ const whyChooseData = [
 ];
 
 export default function Home() {
+  const [homePage, setHomePage] = useState<SanityHomePage | null>(null);
+  const [services, setServices] = useState<SanityService[]>([]);
+  const [companyInfo, setCompanyInfo] = useState<SanityCompanyInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [homeData, servicesData, companyData] = await Promise.all([
+          sanityClient.fetch(HOME_PAGE_QUERY),
+          sanityClient.fetch(SERVICES_QUERY),
+          sanityClient.fetch(COMPANY_INFO_QUERY),
+        ]);
+        setHomePage(homeData);
+        setServices(servicesData);
+        setCompanyInfo(companyData);
+      } catch (err) {
+        console.error("Failed to fetch home page data:", err);
+        setError("데이터를 불러올 수 없습니다. 나중에 다시 시도해주세요.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-foreground/60">로딩 중...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error || !homePage || !companyInfo) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-foreground/60">{error || "데이터를 불러올 수 없습니다."}</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  const defaultAboutItems = [
+    "화학사고예방관리계획서 작성 및 제출 대행",
+    "취급시설 설치·정기·수시검사 수검 지원",
+    "유해화학물질 영업허가 취득 전 과정 대행",
+    "공정안전보고서(PSM) 작성 및 심사 대응",
+    "유해위험방지계획서 작성 및 현장 확인 대응",
+  ];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -136,7 +196,7 @@ export default function Home() {
         {/* Background image */}
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${images.hero})` }}
+          style={{ backgroundImage: `url(${homePage.heroImage ? sanityImageUrl(homePage.heroImage.asset._ref) : images.hero})` }}
         />
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/95 via-[#000000]/55 to-[#000000]/25" />
@@ -144,16 +204,14 @@ export default function Home() {
         <div className="relative container py-20 sm:py-24 lg:py-28">
           {/* Slogan — bigger, bolder */}
           <h1 className="text-[2rem] sm:text-4xl lg:text-[3.2rem] xl:text-[3.8rem] font-extrabold text-white leading-[1.2] mb-6 lg:mb-8 max-w-3xl drop-shadow-xl">
-            화학사고 예방을 최선으로,
-            <br />
-            <span className="text-gold">내 회사처럼</span> 일하는 파트너
+            {homePage.heroTitle}
           </h1>
 
           {/* Thin gold divider */}
           <div className="w-20 h-[3px] bg-gold mb-7 lg:mb-9" />
 
           <p className="text-white/70 text-base sm:text-lg lg:text-xl max-w-2xl mb-8 lg:mb-10 leading-relaxed">
-            화학물질관리법 · 산업안전보건법 전문 컨설팅
+            {homePage.heroSubtitle}
           </p>
 
           {/* CTA buttons — significantly enlarged */}
@@ -186,25 +244,14 @@ export default function Home() {
                 About Us
               </p>
               <h2 className="text-2xl lg:text-4xl font-bold text-navy mb-6 leading-tight">
-                20년 이상의 EHS 전문 경력,
-                <br />
-                신뢰할 수 있는 파트너
+                {homePage.aboutTitle}
               </h2>
               <div className="gold-line mb-8" />
               <p className="text-foreground/80 text-base leading-relaxed mb-6">
-                화학물질관리기술은 화학물질관리법과 산업안전보건법에 근거한 각종
-                인허가 및 안전 컨설팅을 전문으로 수행하는 기업입니다. 신규 화학물질
-                취급 공장 설립부터 기존 사업장의 설비 변경까지, 기업이 필요로 하는
-                모든 화학안전 서비스를 제공합니다.
+                {homePage.aboutContent}
               </p>
               <ul className="space-y-3 mb-8">
-                {[
-                  "화학사고예방관리계획서 작성 및 제출 대행",
-                  "취급시설 설치·정기·수시검사 수검 지원",
-                  "유해화학물질 영업허가 취득 전 과정 대행",
-                  "공정안전보고서(PSM) 작성 및 심사 대응",
-                  "유해위험방지계획서 작성 및 현장 확인 대응",
-                ].map((item, i) => (
+                {defaultAboutItems.map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-gold shrink-0 mt-0.5" />
                     <span className="text-sm text-foreground/80">{item}</span>
@@ -252,7 +299,7 @@ export default function Home() {
                 Our Services
               </p>
               <h2 className="text-2xl lg:text-4xl font-bold text-navy mb-6">
-                5대 핵심 서비스
+                {homePage.servicesTitle}
               </h2>
               <div className="gold-line mx-auto mb-6" />
               <p className="text-foreground/70 text-base leading-relaxed">
@@ -264,10 +311,17 @@ export default function Home() {
 
           <div className="space-y-6">
             {services.map((s, i) => {
-              const Icon = s.icon;
+              const iconMap: Record<string, any> = {
+                FileText: Shield,
+                Search: Award,
+                Award: Target,
+                Shield: Users,
+                ClipboardCheck: CheckCircle2,
+              };
+              const Icon = iconMap[s.iconName] || Shield;
               return (
-                <FadeInSection key={s.id} delay={i * 100}>
-                  <Link href={`/service/${s.slug}`}>
+                <FadeInSection key={s._id} delay={i * 100}>
+                  <Link href={`/service/${s.slug.current}`}>
                     <div className="bg-white rounded-sm border border-border/50 hover:border-gold/30 hover:shadow-xl transition-all duration-300 group overflow-hidden">
                       <div className="flex flex-col sm:flex-row">
                         <div className="sm:w-20 bg-navy/5 group-hover:bg-gold/10 transition-colors flex items-center justify-center p-4 sm:p-0">
@@ -313,7 +367,7 @@ export default function Home() {
                 Why Choose Us
               </p>
               <h2 className="text-2xl lg:text-4xl font-bold text-navy mb-6">
-                화학물질관리기술을 선택하는 이유
+                {homePage.whyChooseTitle}
               </h2>
               <div className="gold-line mx-auto" />
             </div>
@@ -352,7 +406,7 @@ export default function Home() {
         <div className="relative container text-center">
           <FadeInSection>
             <h2 className="text-2xl lg:text-4xl font-bold text-white mb-6">
-              화학안전 인허가, 전문가에게 맡기세요
+              {homePage.ctaTitle}
             </h2>
             <p className="text-white/70 text-base lg:text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
               복잡한 법규와 절차, 화학물질관리기술이 함께합니다.
@@ -362,7 +416,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/contact">
                 <Button className="bg-gold hover:bg-gold-dark text-navy font-bold px-10 py-4 rounded-sm text-base sm:text-lg shadow-xl">
-                  무료 상담 신청
+                  {homePage.ctaButtonText}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
@@ -398,36 +452,34 @@ export default function Home() {
                   전문 컨설턴트가 빠르게 답변 드리겠습니다.
                 </p>
                 <div className="space-y-4">
-                  <a
-                    href={`tel:${companyInfo.phone}`}
-                    className="flex items-center gap-4 p-4 bg-warm-gray rounded-sm hover:bg-navy hover:text-white transition-all group"
-                  >
-                    <div className="w-12 h-12 bg-navy rounded-sm flex items-center justify-center group-hover:bg-gold transition-colors">
-                      <Phone className="w-5 h-5 text-gold group-hover:text-navy" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground group-hover:text-white/70">
-                        전화 상담
-                      </p>
-                      <p className="font-bold text-navy group-hover:text-white">
-                        {companyInfo.phone}
-                      </p>
-                    </div>
-                  </a>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground/70 mb-1">전화</p>
+                    <a href={`tel:${companyInfo.phone}`} className="text-navy font-bold text-lg hover:text-gold transition-colors">
+                      {companyInfo.phone}
+                    </a>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground/70 mb-1">이메일</p>
+                    <a href={`mailto:${companyInfo.email}`} className="text-navy font-bold text-lg hover:text-gold transition-colors">
+                      {companyInfo.email}
+                    </a>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground/70 mb-1">주소</p>
+                    <p className="text-navy font-bold text-lg">{companyInfo.address}</p>
+                  </div>
                 </div>
               </FadeInSection>
             </div>
             <div className="lg:col-span-3">
-              <FadeInSection delay={200}>
-                <ContactForm />
-              </FadeInSection>
+              <ContactForm />
             </div>
           </div>
         </div>
       </section>
 
+      <StickyPhone phone={companyInfo.phone} />
       <Footer />
-      <StickyPhone />
     </div>
   );
 }
