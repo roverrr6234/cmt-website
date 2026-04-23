@@ -99,57 +99,60 @@ const FALLBACK_NOTICES: SanityNotice[] = [
     title: "화학물질관리법 시행규칙 일부개정령(안) 입법예고",
     category: "법령개정",
     isPinned: true,
-    publishedAt: "2026-04-15T00:00:00Z",
-    excerpt:
-      "환경부에서 화학물질관리법 시행규칙 일부개정령(안)을 입법예고하였습니다. 주요 개정 내용은 유해화학물질 취급시설의 검사기준 강화 및 안전진단 주기 조정입니다.",
+    publishedAt: "2026-04-20T00:00:00Z",
+    excerpt: "환경부에서 화학물질관리법 시행규칙 일부개정령(안)을 입법예고합니다.",
+    body: [
+      {
+        _type: "block",
+        _key: "key1",
+        style: "normal",
+        text: "자세한 내용은 환경부 공식 홈페이지를 참고해 주세요.",
+        marks: [],
+      },
+    ],
   },
   {
     _id: "fallback-2",
-    title: "산업안전보건법 시행령 개정안 공포 (2026.3.1 시행)",
-    category: "법령개정",
-    isPinned: true,
-    publishedAt: "2026-03-28T00:00:00Z",
-    excerpt:
-      "공정안전보고서(PSM) 대상 물질 규정량 조정 및 이행상태 평가 기준 변경 사항이 포함된 산업안전보건법 시행령 개정안이 공포되었습니다.",
-  },
-  {
-    _id: "fallback-3",
-    title: "2026년 상반기 무료 컨설팅 상담 안내",
+    title: "2026년 상반기 화학물질 안전관리 교육 개최",
     category: "공지사항",
-    isPinned: true,
-    publishedAt: "2026-03-15T00:00:00Z",
-    excerpt:
-      "화학물질관리기술에서 2026년 상반기 무료 컨설팅 상담을 진행합니다. 화학사고예방관리계획서, 설치검사, PSM 등 전 분야 상담이 가능합니다.",
+    isPinned: false,
+    publishedAt: "2026-04-18T00:00:00Z",
+    excerpt: "화학물질 안전관리에 대한 전문 교육을 개최합니다.",
+    body: [
+      {
+        _type: "block",
+        _key: "key2",
+        style: "normal",
+        text: "참가 신청은 선착순으로 진행됩니다.",
+        marks: [],
+      },
+    ],
   },
 ];
 
+const categories = ["전체", "법령개정", "공지사항", "업계동향"];
+
 export default function Notices() {
-  const [notices, setNotices] = useState<SanityNotice[]>([]);
+  const [notices, setNotices] = useState<SanityNotice[]>(FALLBACK_NOTICES);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [useFallback, setUseFallback] = useState(false);
-
+  const [selectedCategory, setSelectedCategory] = useState("전체");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedCategory, setSelectedCategory] = useState<string>("전체");
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const categories = ["전체", "법령개정", "공지사항", "업계동향"];
 
   const fetchNotices = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setUseFallback(false);
     try {
-      const data = await sanityClient.fetch<SanityNotice[]>(NOTICES_QUERY);
-      if (data && data.length > 0) {
-        setNotices(data);
-      } else {
-        // Sanity에 데이터가 없으면 폴백
-        setNotices(FALLBACK_NOTICES);
-        setUseFallback(true);
-      }
+      const data = await sanityClient.fetch(NOTICES_QUERY);
+      setNotices(data || FALLBACK_NOTICES);
+      setUseFallback(false);
     } catch (err: any) {
-      console.error("Sanity fetch error:", err);
+      // 프로덕션 환경에서는 에러 로깅 미수행
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("Sanity fetch error:", err);
+      }
       setError("데이터를 불러오는 중 오류가 발생했습니다.");
       setNotices(FALLBACK_NOTICES);
       setUseFallback(true);
@@ -252,195 +255,139 @@ export default function Notices() {
               {cat}
             </button>
           ))}
-          <span className="ml-auto text-sm text-gray-500">
-            총 {filteredNotices.length}건
-            {useFallback && (
-              <span className="text-amber-600 ml-1">(오프라인)</span>
-            )}
-          </span>
         </div>
 
         {/* Loading State */}
-        {loading ? (
-          <div className="bg-white rounded-lg border border-gray-200 py-20 flex flex-col items-center justify-center">
-            <Loader2 className="w-8 h-8 text-[#0a1628] animate-spin mb-3" />
-            <p className="text-gray-500 text-sm">게시물을 불러오는 중...</p>
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
           </div>
-        ) : (
-          <>
-            {/* Notice List */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-              {/* Table Header */}
-              <div className="hidden md:grid grid-cols-[1fr_120px] gap-4 px-6 py-3 bg-gray-50 border-b border-gray-200 text-sm font-semibold text-gray-500">
-                <span>제목</span>
-                <span className="text-center">등록일</span>
-              </div>
+        )}
 
-              {/* Pinned + Regular Items */}
-              {allDisplayed.length === 0 ? (
-                <div className="py-16 text-center text-gray-400">
-                  <FileText className="w-10 h-10 mx-auto mb-3 opacity-50" />
-                  <p>등록된 게시물이 없습니다.</p>
-                </div>
-              ) : (
-                allDisplayed.map((notice) => (
-                  <div key={notice._id}>
-                    <button
-                      onClick={() =>
-                        setExpandedId(
-                          expandedId === notice._id ? null : notice._id
-                        )
-                      }
-                      className={`w-full text-left grid grid-cols-1 md:grid-cols-[1fr_120px] gap-1 md:gap-4 px-6 py-4 border-b border-gray-100 hover:bg-blue-50/40 transition-colors ${
-                        notice.isPinned ? "bg-amber-50/60" : ""
-                      }`}
-                    >
-                      {/* Title */}
-                      <div className="flex items-start gap-2">
-                        {notice.isPinned && (
-                          <Pin className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0 fill-amber-500" />
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span
-                              className={`inline-block px-2 py-0.5 text-xs font-medium rounded border ${
-                                categoryColors[notice.category] || ""
-                              }`}
-                            >
-                              {notice.category}
-                            </span>
-                            <span
-                              className={`text-sm md:text-base leading-snug ${
-                                notice.isPinned
-                                  ? "font-bold text-[#0a1628]"
-                                  : "font-medium text-gray-800"
-                              }`}
-                            >
-                              {notice.title}
-                            </span>
-                          </div>
-                        </div>
-                        <ChevronDown
-                          className={`w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5 transition-transform ${
-                            expandedId === notice._id ? "rotate-180" : ""
-                          }`}
+        {/* Notices List */}
+        {!loading && allDisplayed.length > 0 && (
+          <div className="space-y-3">
+            {allDisplayed.map((notice) => (
+              <div
+                key={notice._id}
+                className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+              >
+                <button
+                  onClick={() =>
+                    setExpandedId(expandedId === notice._id ? null : notice._id)
+                  }
+                  className="w-full px-6 py-4 flex items-start justify-between gap-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex-1 text-left">
+                    <div className="flex items-center gap-3 mb-2">
+                      {notice.isPinned && (
+                        <Pin className="w-4 h-4 text-red-500 flex-shrink-0" />
+                      )}
+                      <span
+                        className={`text-xs px-2 py-1 rounded border ${
+                          categoryColors[notice.category]
+                        }`}
+                      >
+                        {notice.category}
+                      </span>
+                    </div>
+                    <h3 className="font-semibold text-[#0a1628] text-left">
+                      {notice.title}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {formatDate(notice.publishedAt)}
+                    </p>
+                  </div>
+                  <ChevronDown
+                    className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${
+                      expandedId === notice._id ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* Expanded Content */}
+                {expandedId === notice._id && (
+                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <p className="text-sm text-gray-700 mb-4">{notice.excerpt}</p>
+
+                    {notice.body && (
+                      <div className="prose prose-sm max-w-none mb-4">
+                        <PortableText
+                          value={notice.body}
+                          components={portableTextComponents}
                         />
                       </div>
+                    )}
 
-                      {/* Date */}
-                      <div className="flex items-center gap-1 text-xs md:text-sm text-gray-400 md:justify-center mt-1 md:mt-0 ml-6 md:ml-0">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>{formatDate(notice.publishedAt)}</span>
-                      </div>
-                    </button>
-
-                    {/* Expanded Content */}
-                    {expandedId === notice._id && (
-                      <div className="px-6 py-5 bg-gray-50 border-b border-gray-200">
-                        {/* Portable Text 본문 (있으면 표시) */}
-                        {notice.body && notice.body.length > 0 ? (
-                          <div className="prose prose-sm max-w-none">
-                            <PortableText
-                              value={notice.body}
-                              components={portableTextComponents}
-                            />
-                          </div>
-                        ) : (
-                          <p className="text-sm text-gray-700 leading-relaxed">
-                            {notice.excerpt}
-                          </p>
-                        )}
-
-                        {/* 첨부파일 */}
-                        {notice.attachments &&
-                          notice.attachments.length > 0 && (
-                            <div className="mt-4 pt-3 border-t border-gray-200">
-                              <p className="text-xs font-semibold text-gray-500 mb-2">
-                                첨부파일
-                              </p>
-                              <div className="flex flex-col gap-1">
-                                {notice.attachments.map((file) => (
-                                  <a
-                                    key={file._key}
-                                    href={sanityFileUrl(file.asset._ref)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                                  >
-                                    <Download className="w-3.5 h-3.5" />
-                                    {file.description || "첨부파일 다운로드"}
-                                  </a>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                        <p className="text-xs text-gray-400 mt-3">
-                          ※ 자세한 내용은 전화 상담(051-412-7707)을 통해 문의해
-                          주세요.
+                    {notice.attachments && notice.attachments.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <p className="text-xs font-semibold text-gray-600 mb-2">
+                          첨부파일
                         </p>
+                        <div className="space-y-2">
+                          {notice.attachments.map((att) => (
+                            <a
+                              key={att._key}
+                              href={sanityFileUrl(att.asset._ref)}
+                              download
+                              className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+                            >
+                              <Download className="w-4 h-4" />
+                              {att.description || "파일 다운로드"}
+                            </a>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
-                ))
-              )}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-8">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-9 h-9 rounded-md text-sm font-medium transition-colors ${
-                        currentPage === page
-                          ? "bg-[#0a1628] text-white"
-                          : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  )
                 )}
-                <button
-                  onClick={() =>
-                    setCurrentPage((p) => Math.min(totalPages, p + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
               </div>
-            )}
-          </>
+            ))}
+          </div>
         )}
 
-        {/* Sanity Studio 관리자 안내 (개발 모드에서만 표시) */}
-        {import.meta.env.DEV && (
-          <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-            <p className="font-semibold mb-1">관리자 안내</p>
-            <p>
-              게시물 작성/수정/삭제는{" "}
-              <a
-                href="https://ckt-notices.sanity.studio/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline font-medium"
-              >
-                Sanity Studio (ckt-notices.sanity.studio)
-              </a>
-              에서 관리할 수 있습니다.
-            </p>
+        {/* Empty State */}
+        {!loading && allDisplayed.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <FileText className="w-12 h-12 text-gray-300 mb-4" />
+            <p className="text-gray-500">공지사항이 없습니다.</p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-8">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                    currentPage === page
+                      ? "bg-[#0a1628] text-white"
+                      : "bg-white border border-gray-200 hover:bg-gray-100"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
         )}
       </main>

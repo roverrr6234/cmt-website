@@ -1,11 +1,13 @@
 import emailjs from '@emailjs/browser';
 
-// EmailJS 초기화
-const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'ox8tYFKMvwjCP8PSo';
-const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_kdwutev';
-const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_m0rkg07';
+// EmailJS 초기화 - 환경변수에서만 로드 (하드코딩 금지)
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '';
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || '';
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '';
 
-emailjs.init(EMAILJS_PUBLIC_KEY);
+if (EMAILJS_PUBLIC_KEY) {
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+}
 
 export interface ContactFormData {
   name: string;
@@ -22,9 +24,18 @@ export interface SendResult {
 }
 
 export async function sendContactEmail(data: ContactFormData): Promise<SendResult> {
+  // 환경변수 검증
+  if (!EMAILJS_PUBLIC_KEY || !EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID) {
+    console.warn('EmailJS configuration incomplete');
+    return {
+      success: false,
+      message: '이메일 서비스가 현재 이용 불가능합니다. 전화로 문의해 주세요.',
+    };
+  }
+
   try {
     const templateParams = {
-      to_email: 'ckt9054@naver.com',
+      to_email: import.meta.env.VITE_EMAILJS_RECIPIENT_EMAIL || 'support@example.com',
       name: data.name,
       from_company: data.from_company || '미입력',
       from_phone: data.from_phone,
@@ -33,7 +44,10 @@ export async function sendContactEmail(data: ContactFormData): Promise<SendResul
       message: data.message,
     };
 
-    console.log('Sending email with params:', templateParams);
+    // 프로덕션 환경에서는 로깅 미수행
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug('[DEV] Sending email...');
+    }
 
     const result = await emailjs.send(
       EMAILJS_SERVICE_ID,
@@ -42,8 +56,6 @@ export async function sendContactEmail(data: ContactFormData): Promise<SendResul
       EMAILJS_PUBLIC_KEY
     );
 
-    console.log('Email sent successfully:', result);
-    
     if (result.status === 200) {
       return {
         success: true,
@@ -56,52 +68,15 @@ export async function sendContactEmail(data: ContactFormData): Promise<SendResul
       };
     }
   } catch (error) {
-    console.error('Failed to send email:', error);
-    
-    let errorMessage = '이메일 발송에 실패했습니다.';
-    
-    // 에러 객체 상세 분석
-    if (error instanceof Error) {
-      errorMessage = error.message;
-      console.error('Error message:', error.message);
-      console.error('Error name:', error.name);
-      
-      // EmailJS 특정 에러 처리
-      if (error.message.includes('Invalid Service ID')) {
-        errorMessage = '이메일 서비스 설정 오류입니다. 관리자에게 문의해 주세요.';
-      } else if (error.message.includes('Invalid Template ID')) {
-        errorMessage = '이메일 템플릿 설정 오류입니다. 관리자에게 문의해 주세요.';
-      } else if (error.message.includes('Invalid Public Key')) {
-        errorMessage = '이메일 인증 오류입니다. 관리자에게 문의해 주세요.';
-      } else if (error.message.includes('Network')) {
-        errorMessage = '네트워크 연결을 확인해 주세요.';
-      } else if (error.message.includes('Failed to fetch')) {
-        errorMessage = '네트워크 연결을 확인해 주세요. 잠시 후 다시 시도해 주세요.';
-      }
-    } else if (typeof error === 'object' && error !== null) {
-      // EmailJS가 반환하는 응답 객체 처리
-      const errorObj = error as any;
-      console.error('Error object keys:', Object.keys(errorObj));
-      console.error('Error object:', JSON.stringify(errorObj));
-      
-      if (errorObj.status === 0) {
-        errorMessage = '네트워크 연결을 확인해 주세요.';
-      } else if (errorObj.text) {
-        errorMessage = `이메일 발송 실패: ${errorObj.text}`;
-      } else if (errorObj.message) {
-        errorMessage = errorObj.message;
-      } else {
-        errorMessage = '이메일 발송 중 오류가 발생했습니다. 다시 시도해 주세요.';
-      }
-    } else if (typeof error === 'string') {
-      errorMessage = error;
+    // 프로덕션 환경에서는 상세 에러 로깅 금지
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[DEV] Email error:', error);
     }
-    
-    console.error('Final error message:', errorMessage);
-    
+
+    // 사용자에게는 범용 메시지만 반환
     return {
       success: false,
-      message: errorMessage,
+      message: '이메일 발송에 실패했습니다. 전화로 문의해 주세요.',
     };
   }
 }
