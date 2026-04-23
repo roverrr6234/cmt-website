@@ -3,17 +3,6 @@
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install",
   "framework": "vite",
-  "env": {
-    "SMTP_HOST": "@smtp_host",
-    "SMTP_PORT": "@smtp_port",
-    "SMTP_USER": "@smtp_user",
-    "SMTP_PASS": "@smtp_pass",
-    "SMTP_FROM_EMAIL": "@smtp_from_email",
-    "SMTP_RECIPIENT_EMAIL": "@smtp_recipient_email",
-    "UPSTASH_REDIS_REST_URL": "@upstash_redis_rest_url",
-    "UPSTASH_REDIS_REST_TOKEN": "@upstash_redis_rest_token",
-    "ALLOWED_ORIGIN": "https://www.cmtbusan.kr"
-  },
   "headers": [
     {
       "source": "/(.*)",
