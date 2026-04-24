@@ -318,7 +318,7 @@ export default function Home() {
                 Shield: Users,
                 ClipboardCheck: CheckCircle2,
               };
-              const Icon = iconMap[s.iconName] || Shield;
+              const Icon = iconMap[s.title] || Shield;
               return (
                 <FadeInSection key={s._id} delay={i * 100}>
                   <Link href={`/service/${s.slug.current}`}>
@@ -367,7 +367,7 @@ export default function Home() {
                 Why Choose Us
               </p>
               <h2 className="text-2xl lg:text-4xl font-bold text-navy mb-6">
-                {homePage.whyChooseTitle}
+                왜 저희를 선택하나요?
               </h2>
               <div className="gold-line mx-auto" />
             </div>
@@ -416,7 +416,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/contact">
                 <Button className="bg-gold hover:bg-gold-dark text-navy font-bold px-10 py-4 rounded-sm text-base sm:text-lg shadow-xl">
-                  {homePage.ctaButtonText}
+                  무료 상담 신청
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>

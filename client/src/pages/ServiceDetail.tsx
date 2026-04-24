@@ -460,18 +460,7 @@ export default function ServiceDetail() {
               {/* Mid-page CTA */}
               <MidPageCTA />
 
-              {/* Dynamic Sections */}
-              {service.sections && service.sections.length > 0 && (
-                <FadeIn delay={300}>
-                  <div className="space-y-10">
-                    {service.sections.map((section, i) => (
-                      <div key={section.sectionId || i}>
-                        <RenderSection section={section} />
-                      </div>
-                    ))}
-                  </div>
-                </FadeIn>
-              )}
+              {/* Dynamic Sections - 향후 추가 예정 */}
 
               {/* Documents */}
               {service.documents && service.documents.length > 0 && (
