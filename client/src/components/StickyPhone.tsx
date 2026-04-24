@@ -5,11 +5,10 @@
 import { Phone } from "lucide-react";
 import { companyInfo } from "@/lib/serviceData";
 
-export default function StickyPhone({ phone }: { phone?: string } = {}) {
-  const displayPhone = phone || companyInfo.phone;
+export default function StickyPhone() {
   return (
     <a
-      href={`tel:${displayPhone}`}
+      href={`tel:${companyInfo.phone}`}
       className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-navy text-white px-5 py-3.5 rounded-full shadow-2xl hover:bg-navy-light transition-all hover:scale-105 group"
       aria-label="전화 상담"
     >
@@ -18,7 +17,7 @@ export default function StickyPhone({ phone }: { phone?: string } = {}) {
       </div>
       <div className="hidden sm:block">
         <p className="text-xs text-white/70">지금 바로 상담</p>
-        <p className="font-bold text-sm tracking-wide">{displayPhone}</p>
+        <p className="font-bold text-sm tracking-wide">{companyInfo.phone}</p>
       </div>
     </a>
   );

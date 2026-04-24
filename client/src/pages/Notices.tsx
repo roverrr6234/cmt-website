@@ -24,6 +24,7 @@ import {
 import {
   sanityClient,
   sanityImageUrl,
+  sanityFileUrl,
   NOTICES_QUERY,
   type SanityNotice,
 } from "@/lib/sanity";
@@ -92,7 +93,6 @@ const portableTextComponents = {
   },
 };
 
-
 /** 정적 폴백 데이터 (Sanity 연결 실패 시) */
 const FALLBACK_NOTICES: SanityNotice[] = [
   {
@@ -102,7 +102,15 @@ const FALLBACK_NOTICES: SanityNotice[] = [
     isPinned: true,
     publishedAt: "2026-04-20T00:00:00Z",
     excerpt: "환경부에서 화학물질관리법 시행규칙 일부개정령(안)을 입법예고합니다.",
-    content: "자세한 내용은 환경부 공식 홈페이지를 참고해 주세요.",
+    body: [
+      {
+        _type: "block",
+        _key: "key1",
+        style: "normal",
+        text: "자세한 내용은 환경부 공식 홈페이지를 참고해 주세요.",
+        marks: [],
+      },
+    ],
   },
   {
     _id: "fallback-2",
@@ -111,7 +119,15 @@ const FALLBACK_NOTICES: SanityNotice[] = [
     isPinned: false,
     publishedAt: "2026-04-18T00:00:00Z",
     excerpt: "화학물질 안전관리에 대한 전문 교육을 개최합니다.",
-    content: "참가 신청은 선착순으로 진행됩니다.",
+    body: [
+      {
+        _type: "block",
+        _key: "key2",
+        style: "normal",
+        text: "참가 신청은 선착순으로 진행됩니다.",
+        marks: [],
+      },
+    ],
   },
 ];
 
@@ -295,9 +311,35 @@ export default function Notices() {
                   <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                     <p className="text-sm text-gray-700 mb-4">{DOMPurify.sanitize(notice.excerpt, { ALLOWED_TAGS: [] })}</p>
 
-                    {/* body - 향후 추가 예정 */}
+                    {notice.body && (
+                      <div className="prose prose-sm max-w-none mb-4">
+                        <PortableText
+                          value={notice.body}
+                          components={portableTextComponents}
+                        />
+                      </div>
+                    )}
 
-                    {/* 첨부파일 - 향후 추가 예정 */}
+                    {notice.attachments && notice.attachments.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <p className="text-xs font-semibold text-gray-600 mb-2">
+                          첨부파일
+                        </p>
+                        <div className="space-y-2">
+                          {notice.attachments.map((att) => (
+                            <a
+                              key={att._key}
+                              href={sanityFileUrl(att.asset._ref)}
+                              download
+                              className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+                            >
+                              <Download className="w-4 h-4" />
+                              {att.description || "파일 다운로드"}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

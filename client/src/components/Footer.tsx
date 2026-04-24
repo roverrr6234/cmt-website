@@ -3,40 +3,13 @@
  * SEO keywords: 부산, 울산, 경남 포함 전국 화학안전 컨설팅
  * Blog link → external Naver blog (target="_blank")
  */
-import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Phone, Mail } from "lucide-react";
-import { sanityClient, FOOTER_QUERY, SERVICES_QUERY, SanityFooter, SanityService } from "@/lib/sanity";
+import { companyInfo, services } from "@/lib/serviceData";
 
 const BLOG_URL = "https://blog.naver.com/ckt9054";
 
 export default function Footer() {
-  const [footer, setFooter] = useState<SanityFooter | null>(null);
-  const [services, setServices] = useState<SanityService[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [footerData, servicesData] = await Promise.all([
-          sanityClient.fetch(FOOTER_QUERY),
-          sanityClient.fetch(SERVICES_QUERY),
-        ]);
-        setFooter(footerData);
-        setServices(servicesData);
-      } catch (err) {
-        console.error("Failed to fetch footer data:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
-
-  if (loading || !footer) {
-    return null;
-  }
-
   return (
     <footer className="bg-navy text-white">
       {/* Main footer */}
@@ -45,20 +18,20 @@ export default function Footer() {
           {/* 사업자 정보 */}
           <div>
             <h3 className="text-gold font-semibold text-sm uppercase tracking-wider mb-6 font-sans">
-              {footer.businessInfoTitle}
+              사업자 정보
             </h3>
             <ul className="space-y-3">
               <li className="text-white/70 text-sm">
-                <span className="text-white/90 font-medium">상호명:</span> {footer.companyNameFooter}
+                <span className="text-white/90 font-medium">상호명:</span> 화학물질관리기술(CMT)
               </li>
               <li className="text-white/70 text-sm">
-                <span className="text-white/90 font-medium">대표자:</span> {footer.ceoNameFooter}
+                <span className="text-white/90 font-medium">대표자:</span> 전규탁
               </li>
               <li className="text-white/70 text-sm">
-                <span className="text-white/90 font-medium">사업자등록번호:</span> {footer.businessNumberFooter}
+                <span className="text-white/90 font-medium">사업자등록번호:</span> 785-17-02316
               </li>
               <li className="text-white/70 text-sm">
-                <span className="text-white/90 font-medium">주소:</span> {footer.addressFooter}
+                <span className="text-white/90 font-medium">주소:</span> 부산광역시 영도구 꿈나무길 261 (2층)
               </li>
             </ul>
           </div>
@@ -66,13 +39,13 @@ export default function Footer() {
           {/* 주요 업무 */}
           <div>
             <h3 className="text-gold font-semibold text-sm uppercase tracking-wider mb-6 font-sans">
-              {footer.servicesTitle}
+              주요 업무
             </h3>
             <ul className="space-y-3">
               {services.map((s) => (
-                <li key={s._id}>
+                <li key={s.id}>
                   <Link
-                    href={`/service/${s.slug.current}`}
+                    href={`/service/${s.slug}`}
                     className="text-white/70 text-sm hover:text-gold transition-colors"
                   >
                     {s.title}
@@ -85,52 +58,59 @@ export default function Footer() {
           {/* 바로가기 */}
           <div>
             <h3 className="text-gold font-semibold text-sm uppercase tracking-wider mb-6 font-sans">
-              {footer.quickLinksTitle}
+              바로가기
             </h3>
             <ul className="space-y-3">
-              {footer.quickLinks.map((link) => (
-                <li key={link._key}>
-                  {link.isExternal ? (
-                    <a
-                      href={link.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white/70 text-sm hover:text-gold transition-colors"
-                    >
-                      {link.label}
-                    </a>
-                  ) : (
-                    <Link href={link.link} className="text-white/70 text-sm hover:text-gold transition-colors">
-                      {link.label}
-                    </Link>
-                  )}
-                </li>
-              ))}
+              <li>
+                <Link href="/" className="text-white/70 text-sm hover:text-gold transition-colors">
+                  홈
+                </Link>
+              </li>
+              <li>
+                <a
+                  href={BLOG_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/70 text-sm hover:text-gold transition-colors"
+                >
+                  블로그
+                </a>
+              </li>
+              <li>
+                <Link href="/notices" className="text-white/70 text-sm hover:text-gold transition-colors">
+                  알림마당
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-white/70 text-sm hover:text-gold transition-colors">
+                  상담 신청
+                </Link>
+              </li>
             </ul>
           </div>
 
           {/* 연락처 */}
           <div>
             <h3 className="text-gold font-semibold text-sm uppercase tracking-wider mb-6 font-sans">
-              {footer.contactTitle}
+              연락처
             </h3>
             <ul className="space-y-3">
               <li>
                 <a
-                  href={`tel:${footer.phoneFooter}`}
+                  href={`tel:${companyInfo.phone}`}
                   className="flex items-start gap-3 text-white/70 hover:text-gold transition-colors"
                 >
                   <Phone className="w-4 h-4 mt-0.5 text-gold shrink-0" />
-                  <span className="text-sm">Tel: {footer.phoneFooter}</span>
+                  <span className="text-sm">Tel: {companyInfo.phone}</span>
                 </a>
               </li>
               <li>
                 <a
-                  href={`mailto:${footer.emailFooter}`}
+                  href={`mailto:${companyInfo.email}`}
                   className="flex items-start gap-3 text-white/70 hover:text-gold transition-colors"
                 >
                   <Mail className="w-4 h-4 mt-0.5 text-gold shrink-0" />
-                  <span className="text-sm">E-mail: {footer.emailFooter}</span>
+                  <span className="text-sm">E-mail: {companyInfo.email}</span>
                 </a>
               </li>
             </ul>
@@ -142,7 +122,7 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="container py-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-white/40 text-xs">
-            {footer.copyrightText}
+            &copy; {new Date().getFullYear()} 화학물질관리기술. All rights reserved.
           </p>
           <p className="text-white/40 text-xs text-center">
             부산, 울산, 경남 포함 전국 화학안전 컨설팅 | 화학사고예방관리계획서 | 설치검사 | 영업허가 | PSM | 유해위험방지계획서
