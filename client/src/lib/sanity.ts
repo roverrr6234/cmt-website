@@ -42,12 +42,30 @@ export const HOME_PAGE_QUERY = `*[_type == "homePage"][0] {
   heroTitle,
   heroSubtitle,
   heroImage,
+  heroCtaButton,
   aboutTitle,
   aboutContent,
+  aboutItems,
+  aboutButtonText,
+  stats[] {
+    _key,
+    number,
+    suffix,
+    label,
+  },
   servicesTitle,
   servicesDescription,
+  whyChooseTitle,
+  whyChooseItems[] {
+    _key,
+    title,
+    description,
+  },
   ctaTitle,
   ctaDescription,
+  ctaButtonText,
+  contactTitle,
+  contactDescription,
 }`
 
 export const SERVICES_QUERY = `*[_type == "service"] | order(_createdAt asc) {
@@ -141,17 +159,46 @@ export interface SanityService {
   cardImage?: {asset: {_ref: string}}
 }
 
+export interface SanityStatItem {
+  _key: string
+  number: number
+  suffix: string
+  label: string
+}
+
+export interface SanityWhyItem {
+  _key: string
+  title: string
+  description: string
+}
+
 export interface SanityHomePage {
   _id: string
+  // ① 영웅 섹션
   heroTitle: string
   heroSubtitle: string
   heroImage?: {asset: {_ref: string}}
+  heroCtaButton?: string
+  // ② 회사 소개 섹션
   aboutTitle: string
   aboutContent: string
+  aboutItems?: string[]
+  aboutButtonText?: string
+  // ③ 실적 통계 섹션
+  stats?: SanityStatItem[]
+  // ④ 서비스 섹션
   servicesTitle: string
-  servicesDescription: string
+  servicesDescription?: string
+  // ⑤ 선택 이유 섹션
+  whyChooseTitle?: string
+  whyChooseItems?: SanityWhyItem[]
+  // ⑥ CTA 섹션
   ctaTitle: string
-  ctaDescription: string
+  ctaDescription?: string
+  ctaButtonText?: string
+  // ⑦ 연락처 섹션
+  contactTitle?: string
+  contactDescription?: string
 }
 
 export interface SanityNotice {
@@ -183,4 +230,11 @@ export interface SanityFooter {
   phoneFooter: string
   emailFooter: string
   copyrightText: string
+}
+
+export function sanityFileUrl(ref: string): string {
+  if (!ref) return ''
+  // ref format: file-{id}-{extension}
+  const [, id, ext] = ref.split('-')
+  return `https://cdn.sanity.io/files/${projectId}/${dataset}/${id}.${ext}`
 }

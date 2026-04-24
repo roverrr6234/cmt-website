@@ -1,8 +1,8 @@
-/*
+/**
+ * Home.tsx
  * Design: "Authoritative Counsel" — Authoritative law firm / engineering office aesthetic
  * Deep Navy + Gold accents, Noto Serif KR headings, generous whitespace
- * Hero: bold slogan + enlarged CTA buttons (no service links — moved to GNB)
- * About section: text-only (meeting photo removed)
+ * 모든 섹션 데이터: Sanity CMS에서 동적 로드
  */
 import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
@@ -22,8 +22,20 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import StickyPhone from "@/components/StickyPhone";
-import { sanityClient, HOME_PAGE_QUERY, SERVICES_QUERY, COMPANY_INFO_QUERY, SanityHomePage, SanityService, SanityCompanyInfo, sanityImageUrl } from "@/lib/sanity";
+import {
+  sanityClient,
+  HOME_PAGE_QUERY,
+  SERVICES_QUERY,
+  COMPANY_INFO_QUERY,
+  SanityHomePage,
+  SanityService,
+  SanityCompanyInfo,
+  sanityImageUrl,
+} from "@/lib/sanity";
 import { images } from "@/lib/images";
+
+// 아이콘 순환 배열 (Why Choose Us 카드용)
+const ICON_CYCLE = [Shield, Award, Target, Users, Zap, MapPin];
 
 function CountUp({ end, suffix = "" }: { end: number; suffix?: string }) {
   const [count, setCount] = useState(0);
@@ -65,7 +77,15 @@ function CountUp({ end, suffix = "" }: { end: number; suffix?: string }) {
   );
 }
 
-function FadeInSection({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+function FadeInSection({
+  children,
+  className = "",
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -93,37 +113,29 @@ function FadeInSection({ children, className = "", delay = 0 }: { children: Reac
   );
 }
 
-const whyChooseData = [
-  {
-    title: "20년 이상 전문 경력",
-    desc: "화학물질관리법과 산업안전보건법 분야에서 축적된 깊은 전문성으로 최적의 솔루션을 제공합니다.",
-    icon: Shield,
-  },
-  {
-    title: "원스톱 서비스",
-    desc: "예방관리계획서부터 영업허가까지, 화학안전 인허가의 모든 과정을 한 곳에서 해결할 수 있습니다.",
-    icon: Award,
-  },
-  {
-    title: "높은 적합 판정률",
-    desc: "철저한 사전 검토와 현장 점검으로 한 번에 적합 판정을 받을 수 있도록 지원합니다.",
-    icon: Target,
-  },
-  {
-    title: "맞춤형 컨설팅",
-    desc: "사업장 규모와 취급 물질에 따른 맞춤형 컨설팅으로 불필요한 비용을 절감합니다.",
-    icon: Users,
-  },
-  {
-    title: "신속한 대응",
-    desc: "법규 개정 및 긴급 상황에 신속하게 대응하여 사업 운영에 차질이 없도록 합니다.",
-    icon: Zap,
-  },
-  {
-    title: "전국 서비스",
-    desc: "부산, 울산, 경남을 중심으로 전국 어디서나 현장 방문 컨설팅을 제공합니다.",
-    icon: MapPin,
-  },
+// 기본 폴백 데이터
+const DEFAULT_ABOUT_ITEMS = [
+  "화학사고예방관리계획서 작성 및 제출 대행",
+  "취급시설 설치·정기·수시검사 수검 지원",
+  "유해화학물질 영업허가 취득 전 과정 대행",
+  "공정안전보고서(PSM) 작성 및 심사 대응",
+  "유해위험방지계획서 작성 및 현장 확인 대응",
+];
+
+const DEFAULT_STATS = [
+  { number: 20, suffix: "+", label: "년 전문 경력" },
+  { number: 500, suffix: "+", label: "건 프로젝트 수행" },
+  { number: 300, suffix: "+", label: "개 고객사" },
+  { number: 99, suffix: "%", label: "고객 만족도" },
+];
+
+const DEFAULT_WHY_ITEMS = [
+  { title: "20년 이상 전문 경력", description: "화학물질관리법과 산업안전보건법 분야에서 축적된 깊은 전문성으로 최적의 솔루션을 제공합니다." },
+  { title: "원스톱 서비스", description: "예방관리계획서부터 영업허가까지, 화학안전 인허가의 모든 과정을 한 곳에서 해결할 수 있습니다." },
+  { title: "높은 적합 판정률", description: "철저한 사전 검토와 현장 점검으로 한 번에 적합 판정을 받을 수 있도록 지원합니다." },
+  { title: "맞춤형 컨설팅", description: "사업장 규모와 취급 물질에 따른 맞춤형 컨설팅으로 불필요한 비용을 절감합니다." },
+  { title: "신속한 대응", description: "법규 개정 및 긴급 상황에 신속하게 대응하여 사업 운영에 차질이 없도록 합니다." },
+  { title: "전국 서비스", description: "부산, 울산, 경남을 중심으로 전국 어디서나 현장 방문 컨설팅을 제공합니다." },
 ];
 
 export default function Home() {
@@ -179,46 +191,42 @@ export default function Home() {
     );
   }
 
-  const defaultAboutItems = [
-    "화학사고예방관리계획서 작성 및 제출 대행",
-    "취급시설 설치·정기·수시검사 수검 지원",
-    "유해화학물질 영업허가 취득 전 과정 대행",
-    "공정안전보고서(PSM) 작성 및 심사 대응",
-    "유해위험방지계획서 작성 및 현장 확인 대응",
-  ];
+  // Sanity 데이터 또는 기본값 사용
+  const aboutItems = homePage.aboutItems?.length ? homePage.aboutItems : DEFAULT_ABOUT_ITEMS;
+  const stats = homePage.stats?.length ? homePage.stats : DEFAULT_STATS;
+  const whyItems = homePage.whyChooseItems?.length ? homePage.whyChooseItems : DEFAULT_WHY_ITEMS;
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      {/* Hero Section — enlarged slogan + bigger CTA */}
+      {/* ① 영웅(Hero) 섹션 */}
       <section className="relative min-h-[540px] sm:min-h-[600px] lg:min-h-[680px] flex items-center overflow-hidden">
-        {/* Background image */}
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${homePage.heroImage ? sanityImageUrl(homePage.heroImage.asset._ref) : images.hero})` }}
+          style={{
+            backgroundImage: `url(${
+              homePage.heroImage ? sanityImageUrl(homePage.heroImage.asset._ref) : images.hero
+            })`,
+          }}
         />
-        {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/95 via-[#000000]/55 to-[#000000]/25" />
 
         <div className="relative container py-20 sm:py-24 lg:py-28">
-          {/* Slogan — bigger, bolder */}
           <h1 className="text-[2rem] sm:text-4xl lg:text-[3.2rem] xl:text-[3.8rem] font-extrabold text-white leading-[1.2] mb-6 lg:mb-8 max-w-3xl drop-shadow-xl">
             {homePage.heroTitle}
           </h1>
 
-          {/* Thin gold divider */}
           <div className="w-20 h-[3px] bg-gold mb-7 lg:mb-9" />
 
           <p className="text-white/70 text-base sm:text-lg lg:text-xl max-w-2xl mb-8 lg:mb-10 leading-relaxed">
             {homePage.heroSubtitle}
           </p>
 
-          {/* CTA buttons — significantly enlarged */}
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
             <Link href="/contact">
               <Button className="bg-gold hover:bg-gold-dark text-[#000000] font-extrabold px-10 sm:px-12 py-4 sm:py-5 rounded-sm text-base sm:text-lg lg:text-xl shadow-xl hover:shadow-2xl transition-all">
-                무료 상담 신청
+                {homePage.heroCtaButton || "무료 상담 신청"}
                 <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 ml-3" />
               </Button>
             </Link>
@@ -235,7 +243,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About / Experience Section — TEXT ONLY (meeting photo removed) */}
+      {/* ② 회사 소개 섹션 */}
       <section className="section-padding bg-white">
         <div className="container">
           <FadeInSection>
@@ -251,7 +259,7 @@ export default function Home() {
                 {homePage.aboutContent}
               </p>
               <ul className="space-y-3 mb-8">
-                {defaultAboutItems.map((item, i) => (
+                {aboutItems.map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-gold shrink-0 mt-0.5" />
                     <span className="text-sm text-foreground/80">{item}</span>
@@ -260,7 +268,7 @@ export default function Home() {
               </ul>
               <Link href="/contact">
                 <Button className="bg-navy hover:bg-navy-light text-white px-8 py-3 rounded-sm">
-                  상담 문의하기
+                  {homePage.aboutButtonText || "상담 문의하기"}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
@@ -269,19 +277,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* ③ 실적 통계 섹션 */}
       <section className="bg-navy py-16 lg:py-20">
         <div className="container">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-            {[
-              { end: 20, suffix: "+", label: "년 전문 경력" },
-              { end: 500, suffix: "+", label: "건 프로젝트 수행" },
-              { end: 300, suffix: "+", label: "개 고객사" },
-              { end: 99, suffix: "%", label: "고객 만족도" },
-            ].map((stat, i) => (
+            {stats.map((stat, i) => (
               <FadeInSection key={i} delay={i * 150}>
                 <div className="text-center">
-                  <CountUp end={stat.end} suffix={stat.suffix} />
+                  <CountUp end={stat.number} suffix={stat.suffix} />
                   <p className="text-white/70 text-sm mt-2">{stat.label}</p>
                 </div>
               </FadeInSection>
@@ -290,7 +293,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Services Overview */}
+      {/* ④ 서비스 섹션 */}
       <section className="section-padding bg-warm-gray">
         <div className="container">
           <FadeInSection>
@@ -303,22 +306,15 @@ export default function Home() {
               </h2>
               <div className="gold-line mx-auto mb-6" />
               <p className="text-foreground/70 text-base leading-relaxed">
-                화학물질관리법과 산업안전보건법에 근거한 전문 컨설팅으로
-                귀사의 법적 의무 이행을 완벽하게 지원합니다.
+                {homePage.servicesDescription ||
+                  "화학물질관리법과 산업안전보건법에 근거한 전문 컨설팅으로 귀사의 법적 의무 이행을 완벽하게 지원합니다."}
               </p>
             </div>
           </FadeInSection>
 
           <div className="space-y-6">
             {services.map((s, i) => {
-              const iconMap: Record<string, any> = {
-                FileText: Shield,
-                Search: Award,
-                Award: Target,
-                Shield: Users,
-                ClipboardCheck: CheckCircle2,
-              };
-              const Icon = iconMap[s.title] || Shield;
+              const Icon = ICON_CYCLE[i % ICON_CYCLE.length];
               return (
                 <FadeInSection key={s._id} delay={i * 100}>
                   <Link href={`/service/${s.slug.current}`}>
@@ -334,12 +330,16 @@ export default function Home() {
                                 <h3 className="text-navy font-bold text-lg lg:text-xl font-serif">
                                   {s.title}
                                 </h3>
-                                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-sm">
-                                  {s.law} {s.lawArticle}
-                                </span>
+                                {(s.law || s.lawArticle) && (
+                                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-sm">
+                                    {s.law} {s.lawArticle}
+                                  </span>
+                                )}
                               </div>
                               <p className="text-foreground/70 text-sm leading-relaxed max-w-2xl">
-                                {s.overview.substring(0, 120)}...
+                                {s.overview
+                                  ? s.overview.substring(0, 120) + "..."
+                                  : s.description?.substring(0, 120) + "..."}
                               </p>
                             </div>
                             <div className="flex items-center gap-2 text-gold font-medium text-sm shrink-0 group-hover:translate-x-1 transition-transform">
@@ -358,7 +358,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Choose Us */}
+      {/* ⑤ 선택 이유 섹션 */}
       <section className="section-padding bg-white">
         <div className="container">
           <FadeInSection>
@@ -367,27 +367,23 @@ export default function Home() {
                 Why Choose Us
               </p>
               <h2 className="text-2xl lg:text-4xl font-bold text-navy mb-6">
-                왜 저희를 선택하나요?
+                {homePage.whyChooseTitle || "왜 저희를 선택하나요?"}
               </h2>
               <div className="gold-line mx-auto" />
             </div>
           </FadeInSection>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {whyChooseData.map((item, i) => {
-              const Icon = item.icon;
+            {whyItems.map((item, i) => {
+              const Icon = ICON_CYCLE[i % ICON_CYCLE.length];
               return (
                 <FadeInSection key={i} delay={i * 100}>
                   <div className="p-8 border border-border/50 rounded-sm hover:border-gold/30 hover:shadow-lg transition-all duration-300 group h-full">
                     <div className="w-14 h-14 bg-navy/5 rounded-sm flex items-center justify-center mb-6 group-hover:bg-gold/10 transition-colors">
                       <Icon className="w-7 h-7 text-navy group-hover:text-gold transition-colors" />
                     </div>
-                    <h3 className="text-navy font-bold text-lg mb-3 font-serif">
-                      {item.title}
-                    </h3>
-                    <p className="text-foreground/70 text-sm leading-relaxed">
-                      {item.desc}
-                    </p>
+                    <h3 className="text-navy font-bold text-lg mb-3 font-serif">{item.title}</h3>
+                    <p className="text-foreground/70 text-sm leading-relaxed">{item.description}</p>
                   </div>
                 </FadeInSection>
               );
@@ -396,7 +392,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section — link goes to /contact (page top) */}
+      {/* ⑥ CTA 섹션 */}
       <section className="relative py-20 lg:py-28 overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -408,15 +404,14 @@ export default function Home() {
             <h2 className="text-2xl lg:text-4xl font-bold text-white mb-6">
               {homePage.ctaTitle}
             </h2>
-            <p className="text-white/70 text-base lg:text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
-              복잡한 법규와 절차, 화학물질관리기술이 함께합니다.
-              <br />
-              무료 상담을 통해 귀사에 필요한 서비스를 확인하세요.
+            <p className="text-white/70 text-base lg:text-lg max-w-2xl mx-auto mb-10 leading-relaxed whitespace-pre-line">
+              {homePage.ctaDescription ||
+                "복잡한 법규와 절차, 화학물질관리기술이 함께합니다.\n무료 상담을 통해 귀사에 필요한 서비스를 확인하세요."}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/contact">
                 <Button className="bg-gold hover:bg-gold-dark text-navy font-bold px-10 py-4 rounded-sm text-base sm:text-lg shadow-xl">
-                  무료 상담 신청
+                  {homePage.ctaButtonText || "무료 상담 신청"}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
@@ -434,7 +429,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Contact Section */}
+      {/* ⑦ 연락처 섹션 */}
       <section className="section-padding bg-white" id="contact">
         <div className="container">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-16">
@@ -444,23 +439,29 @@ export default function Home() {
                   Contact Us
                 </p>
                 <h2 className="text-2xl lg:text-3xl font-bold text-navy mb-6">
-                  상담 신청
+                  {homePage.contactTitle || "상담 신청"}
                 </h2>
                 <div className="gold-line mb-8" />
                 <p className="text-foreground/70 text-base leading-relaxed mb-8">
-                  화학안전 인허가에 관한 궁금한 점이 있으시면 언제든지 문의해 주세요.
-                  전문 컨설턴트가 빠르게 답변 드리겠습니다.
+                  {homePage.contactDescription ||
+                    "화학안전 인허가에 관한 궁금한 점이 있으시면 언제든지 문의해 주세요. 전문 컨설턴트가 빠르게 답변 드리겠습니다."}
                 </p>
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm font-semibold text-foreground/70 mb-1">전화</p>
-                    <a href={`tel:${companyInfo.phone}`} className="text-navy font-bold text-lg hover:text-gold transition-colors">
+                    <a
+                      href={`tel:${companyInfo.phone}`}
+                      className="text-navy font-bold text-lg hover:text-gold transition-colors"
+                    >
                       {companyInfo.phone}
                     </a>
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-foreground/70 mb-1">이메일</p>
-                    <a href={`mailto:${companyInfo.email}`} className="text-navy font-bold text-lg hover:text-gold transition-colors">
+                    <a
+                      href={`mailto:${companyInfo.email}`}
+                      className="text-navy font-bold text-lg hover:text-gold transition-colors"
+                    >
                       {companyInfo.email}
                     </a>
                   </div>
