@@ -40,21 +40,13 @@ export default function Header() {
         }`}
       >
         <div className="container flex items-center justify-between h-16 sm:h-[72px] lg:h-20">
-          {/* Left: Logo + Business Name */}
+          {/* Left: Logo */}
           <Link href="/" className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             <img
               src={images.logo}
               alt="화학물질관리기술 로고"
               className="h-11 sm:h-[52px] lg:h-[60px] w-auto object-contain"
             />
-            <div className="hidden sm:block leading-tight">
-              <p className="text-navy font-bold tracking-wide" style={{fontSize: '20px'}}>
-                화학물질관리기술
-              </p>
-              <p className="text-navy font-semibold tracking-wide" style={{fontSize: '9px'}}>
-                Chemicals Management Technology
-              </p>
-            </div>
           </Link>
 
           {/* Center: Phone Number */}
