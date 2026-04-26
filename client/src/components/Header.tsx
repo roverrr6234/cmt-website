@@ -48,11 +48,11 @@ export default function Header() {
               className="h-11 sm:h-[52px] lg:h-[60px] w-auto object-contain"
             />
             <div className="hidden sm:block leading-tight">
-              <p className="text-navy text-xs lg:text-[13px] font-semibold tracking-wide">
-                Chemicals Management
+              <p className="text-navy font-bold tracking-wide" style={{fontSize: '20px'}}>
+                화학물질관리기술
               </p>
-              <p className="text-navy text-xs lg:text-[13px] font-semibold tracking-wide">
-                Technology
+              <p className="text-navy font-semibold tracking-wide" style={{fontSize: '9px'}}>
+                Chemicals Management Technology
               </p>
             </div>
           </Link>
