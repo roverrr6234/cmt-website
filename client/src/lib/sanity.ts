@@ -138,6 +138,42 @@ export async function getAllNotices() {
 }
 
 // ── 특정 공지사항 ──
+// ── Notices.tsx 호환 exports ──
+export const NOTICES_QUERY = `*[_type == "notice"] | order(isPinned desc, publishedAt desc) {
+  _id,
+  title,
+  category,
+  excerpt,
+  "body": content,
+  publishedAt,
+  isPinned
+}`;
+
+export type SanityNotice = {
+  _id: string;
+  title: string;
+  category: string;
+  excerpt?: string;
+  body?: any;
+  publishedAt: string;
+  isPinned: boolean;
+  attachments?: any[];
+};
+
+export function sanityImageUrl(ref: string, width?: number) {
+  if (!ref) return "";
+  const [, id, dimensions, format] = ref.split("-");
+  const w = width ? `?w=${width}` : "";
+  return `https://cdn.sanity.io/images/7l80ou25/production/${id}-${dimensions}.${format}${w}`;
+}
+
+export function sanityFileUrl(ref: string) {
+  if (!ref) return "";
+  const [, id, ext] = ref.split("-");
+  return `https://cdn.sanity.io/files/7l80ou25/production/${id}.${ext}`;
+}
+
+// ── 특정 공지사항 ──
 export async function getNoticeById(id: string) {
   try {
     return await sanityClient.fetch(
