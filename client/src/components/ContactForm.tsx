@@ -2,10 +2,11 @@
  * Design: "Authoritative Counsel" — Clean form with navy/gold accents
  * Sends inquiry via Vercel API Route (backend email sending)
  * Security: Input validation, Rate limiting, XSS prevention with DOMPurify
+ * DATA: All content loaded from Sanity CMS
  */
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { companyInfo, services } from "@/lib/serviceData";
+import { getCompanyInfo, getAllServices } from "@/lib/sanity";
 import { Send, Phone, Mail, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import DOMPurify from "dompurify";
@@ -30,20 +31,21 @@ const validateEmail = (email: string): boolean => {
   return emailPattern.test(email) && email.length <= 254;
 };
 
-// 전화번호 형식 검증
+// 전화번호 검증 (기본 형식)
 const validatePhone = (phone: string): boolean => {
+  if (!phone || phone.trim().length === 0) return false;
   const phonePattern = /^[0-9\-\(\)\s]+$/;
   return phonePattern.test(phone) && phone.length >= 10 && phone.length <= 20;
 };
 
-// Rate Limit 저장소 (클라이언트 사이드, 보조 역할)
-const submitAttempts = new Map<string, number[]>();
+// Rate Limit 설정
+const MAX_ATTEMPTS = 5;
 const RATE_LIMIT_WINDOW = 60000; // 1분
-const MAX_ATTEMPTS = 3; // 1분에 3회 제한
+const submitAttempts = new Map<string, number[]>();
 
 const checkRateLimit = (): boolean => {
+  const key = typeof window !== "undefined" ? navigator.userAgent : "server";
   const now = Date.now();
-  const key = "contact-form";
 
   if (!submitAttempts.has(key)) {
     submitAttempts.set(key, []);
@@ -76,7 +78,15 @@ export default function ContactForm({
   });
   const [isLoading, setIsLoading] = useState(false);
   const [rateLimitError, setRateLimitError] = useState(false);
+  const [phone, setPhone] = useState("051-714-4100");
+  const [services, setServices] = useState<any[]>([]);
   const rateLimitTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sanity에서 데이터 로드
+  useEffect(() => {
+    getCompanyInfo().then((d: any) => { if (d?.phone) setPhone(d.phone); }).catch(() => {});
+    getAllServices().then((d: any[]) => { if (d?.length) setServices(d); }).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,31 +159,19 @@ export default function ContactForm({
           service: preselectedService,
           message: "",
         });
-      } else if (response.status === 429) {
-        // 서버 사이드 Rate Limit
-        setRateLimitError(true);
-        toast.error(data.message || "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.");
-
-        if (rateLimitTimerRef.current) clearTimeout(rateLimitTimerRef.current);
-        rateLimitTimerRef.current = setTimeout(() => {
-          setRateLimitError(false);
-        }, (data.retryAfter || 60) * 1000);
       } else {
         toast.error(data.message || "요청 처리 중 오류가 발생했습니다.");
       }
     } catch (error) {
-      // 프로덕션 환경에서는 에러 로깅 미수행
-      if (process.env.NODE_ENV !== "production") {
-        console.error("[DEV] Form submission error:", error);
-      }
-      toast.error("요청 처리 중 오류가 발생했습니다. 다시 시도해 주세요.");
+      console.error("Form submission error:", error);
+      toast.error("네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCopyPhone = () => {
-    navigator.clipboard.writeText(companyInfo.phone);
+    navigator.clipboard.writeText(phone);
     toast.success("전화번호가 복사되었습니다.");
   };
 
@@ -244,8 +242,8 @@ export default function ContactForm({
             disabled={isLoading || rateLimitError}
           >
             <option value="">서비스 선택</option>
-            {services.map((s) => (
-              <option key={s.slug} value={s.slug}>
+            {services.map((s: any) => (
+              <option key={s.slug?.current || s.slug} value={s.slug?.current || s.slug}>
                 {s.title}
               </option>
             ))}
@@ -262,10 +260,17 @@ export default function ContactForm({
             disabled={isLoading || rateLimitError}
             maxLength={5000}
           />
+
+          {rateLimitError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+              요청이 너무 많습니다. 1분 후 다시 시도해 주세요.
+            </div>
+          )}
+
           <Button
             type="submit"
             disabled={isLoading || rateLimitError}
-            className="w-full bg-navy hover:bg-navy/90 text-white"
+            className="w-full bg-gold hover:bg-gold-dark text-navy font-bold py-3"
           >
             {isLoading ? (
               <>
@@ -279,11 +284,6 @@ export default function ContactForm({
               </>
             )}
           </Button>
-          {rateLimitError && (
-            <p className="text-xs text-red-600 text-center">
-              요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.
-            </p>
-          )}
         </form>
       </div>
     );
@@ -291,134 +291,164 @@ export default function ContactForm({
 
   // Full variant
   return (
-    <form onSubmit={handleSubmit} className={`space-y-6 ${className}`}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className={`bg-white rounded-sm border border-border/50 p-8 lg:p-10 ${className}`}>
+      <h3 className="text-navy font-bold text-2xl font-serif mb-2">
+        무료 상담 신청
+      </h3>
+      <div className="gold-line mb-8" />
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              이름 *
+            </label>
+            <input
+              type="text"
+              placeholder="이름을 입력해 주세요"
+              value={form.name}
+              onChange={(e) =>
+                setForm({ ...form, name: e.target.value.slice(0, 100) })
+              }
+              className={inputClass}
+              required
+              disabled={isLoading || rateLimitError}
+              maxLength={100}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              회사명
+            </label>
+            <input
+              type="text"
+              placeholder="회사명을 입력해 주세요"
+              value={form.company}
+              onChange={(e) =>
+                setForm({ ...form, company: e.target.value.slice(0, 100) })
+              }
+              className={inputClass}
+              disabled={isLoading || rateLimitError}
+              maxLength={100}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              연락처 *
+            </label>
+            <input
+              type="tel"
+              placeholder="010-1234-5678"
+              value={form.phone}
+              onChange={(e) =>
+                setForm({ ...form, phone: e.target.value.slice(0, 20) })
+              }
+              className={inputClass}
+              required
+              disabled={isLoading || rateLimitError}
+              maxLength={20}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              이메일
+            </label>
+            <input
+              type="email"
+              placeholder="example@company.com"
+              value={form.email}
+              onChange={(e) =>
+                setForm({ ...form, email: e.target.value.slice(0, 254) })
+              }
+              className={inputClass}
+              disabled={isLoading || rateLimitError}
+              maxLength={254}
+            />
+          </div>
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">
-            이름 *
+            서비스 선택
           </label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) =>
-              setForm({ ...form, name: e.target.value.slice(0, 100) })
-            }
+          <select
+            value={form.service}
+            onChange={(e) => setForm({ ...form, service: e.target.value })}
             className={inputClass}
+            disabled={isLoading || rateLimitError}
+          >
+            <option value="">서비스를 선택해 주세요</option>
+            {services.map((s: any) => (
+              <option key={s.slug?.current || s.slug} value={s.slug?.current || s.slug}>
+                {s.title}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">
+            문의 내용 *
+          </label>
+          <textarea
+            value={form.message}
+            onChange={(e) =>
+              setForm({ ...form, message: e.target.value.slice(0, 5000) })
+            }
+            className={inputClass + " resize-none"}
+            rows={6}
             required
             disabled={isLoading || rateLimitError}
-            maxLength={100}
+            maxLength={5000}
+            placeholder="문의 내용을 입력해 주세요"
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            회사명
-          </label>
-          <input
-            type="text"
-            value={form.company}
-            onChange={(e) =>
-              setForm({ ...form, company: e.target.value.slice(0, 100) })
-            }
-            className={inputClass}
-            disabled={isLoading || rateLimitError}
-            maxLength={100}
-          />
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            연락처 *
-          </label>
-          <input
-            type="tel"
-            value={form.phone}
-            onChange={(e) =>
-              setForm({ ...form, phone: e.target.value.slice(0, 20) })
-            }
-            className={inputClass}
-            required
-            disabled={isLoading || rateLimitError}
-            maxLength={20}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            이메일
-          </label>
-          <input
-            type="email"
-            value={form.email}
-            onChange={(e) =>
-              setForm({ ...form, email: e.target.value.slice(0, 254) })
-            }
-            className={inputClass}
-            disabled={isLoading || rateLimitError}
-            maxLength={254}
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-2">
-          서비스 선택
-        </label>
-        <select
-          value={form.service}
-          onChange={(e) => setForm({ ...form, service: e.target.value })}
-          className={inputClass}
-          disabled={isLoading || rateLimitError}
-        >
-          <option value="">서비스를 선택해 주세요</option>
-          {services.map((s) => (
-            <option key={s.slug} value={s.slug}>
-              {s.title}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-foreground mb-2">
-          문의 내용 *
-        </label>
-        <textarea
-          value={form.message}
-          onChange={(e) =>
-            setForm({ ...form, message: e.target.value.slice(0, 5000) })
-          }
-          className={inputClass + " resize-none"}
-          rows={6}
-          required
-          disabled={isLoading || rateLimitError}
-          maxLength={5000}
-        />
-      </div>
-
-      {rateLimitError && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-          요청이 너무 많습니다. 1분 후 다시 시도해 주세요.
-        </div>
-      )}
-
-      <Button
-        type="submit"
-        disabled={isLoading || rateLimitError}
-        className="w-full bg-navy hover:bg-navy/90 text-white text-base py-3"
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            전송 중...
-          </>
-        ) : (
-          <>
-            <Send className="w-4 h-4 mr-2" />
-            상담 신청
-          </>
+        {rateLimitError && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+            요청이 너무 많습니다. 1분 후 다시 시도해 주세요.
+          </div>
         )}
-      </Button>
-    </form>
+
+        <Button
+          type="submit"
+          disabled={isLoading || rateLimitError}
+          className="w-full bg-navy hover:bg-navy/90 text-white text-base py-3"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              전송 중...
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4 mr-2" />
+              상담 신청
+            </>
+          )}
+        </Button>
+      </form>
+
+      {/* 연락처 정보 */}
+      <div className="mt-8 pt-8 border-t border-border/50">
+        <p className="text-sm text-muted-foreground mb-4">
+          빠른 상담을 원하신다면 아래로 연락주세요:
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <button
+            onClick={handleCopyPhone}
+            className="flex items-center gap-3 p-3 bg-warm-gray rounded-sm hover:bg-navy hover:text-white transition-all group"
+          >
+            <Phone className="w-5 h-5 text-gold group-hover:text-gold" />
+            <span className="text-sm font-medium">{phone}</span>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

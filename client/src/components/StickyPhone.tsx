@@ -1,14 +1,22 @@
-/*
+/**
  * Sticky phone button - always visible on mobile
  * Desktop: bottom-right floating button
+ * DATA: Phone loaded from Sanity CMS
  */
 import { Phone } from "lucide-react";
-import { companyInfo } from "@/lib/serviceData";
+import { useEffect, useState } from "react";
+import { getCompanyInfo } from "@/lib/sanity";
 
 export default function StickyPhone() {
+  const [phone, setPhone] = useState("051-714-4100");
+
+  useEffect(() => {
+    getCompanyInfo().then((d: any) => { if (d?.phone) setPhone(d.phone); }).catch(() => {});
+  }, []);
+
   return (
     <a
-      href={`tel:${companyInfo.phone}`}
+      href={`tel:${phone}`}
       className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-navy text-white px-5 py-3.5 rounded-full shadow-2xl hover:bg-navy-light transition-all hover:scale-105 group"
       aria-label="전화 상담"
     >
@@ -17,7 +25,7 @@ export default function StickyPhone() {
       </div>
       <div className="hidden sm:block">
         <p className="text-xs text-white/70">지금 바로 상담</p>
-        <p className="font-bold text-sm tracking-wide">{companyInfo.phone}</p>
+        <p className="font-bold text-sm tracking-wide">{phone}</p>
       </div>
     </a>
   );

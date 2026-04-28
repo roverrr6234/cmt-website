@@ -309,7 +309,7 @@ export default function Notices() {
                 {/* Expanded Content */}
                 {expandedId === notice._id && (
                   <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                    <p className="text-sm text-gray-700 mb-4">{DOMPurify.sanitize(notice.excerpt, { ALLOWED_TAGS: [] })}</p>
+                    <p className="text-sm text-gray-700 mb-4">{DOMPurify.sanitize(notice.excerpt || '', { ALLOWED_TAGS: [] })}</p>
 
                     {notice.body && (
                       <div className="prose prose-sm max-w-none mb-4">
