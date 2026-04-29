@@ -27,9 +27,11 @@ import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import StickyPhone from "@/components/StickyPhone";
 import { services, companyInfo } from "@/lib/serviceData";
-import type { ServiceSection } from "@/lib/serviceData";
+import type { ServiceSection, ServiceData } from "@/lib/serviceData";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { diagramComponents } from "@/components/diagrams";
+import { getServiceBySlug } from "@/lib/sanity";
+import { convertSanityService } from "@/lib/sanityToService";
 
 /* ── Breadcrumb with hover dropdown ── */
 function BreadcrumbNav({ currentSlug, currentTitle }: { currentSlug: string; currentTitle: string }) {
@@ -390,13 +392,64 @@ function RenderSection({ section }: { section: ServiceSection }) {
  * ══════════════════════════════════════════════ */
 export default function ServiceDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const service = services.find((s) => s.slug === slug);
+
+  /**
+   * 데이터 조회 전략 (디자인 불변, fallback-first):
+   * 1. 즉시: 코드 안의 5대 서비스(serviceData.ts) 에서 동기적으로 찾는다 — 첫 렌더부터 깜빡임 없음.
+   * 2. 비동기: Sanity 에서 같은 slug 로 다시 조회. 있으면 그 데이터로 교체 (아버님 수정 반영).
+   * 3. 둘 다 없으면 404.
+   * 4. 새로 추가된 Sanity-only 서비스도 잠깐의 로딩 후 동일 디자인으로 렌더.
+   */
+  const fallback = services.find((s) => s.slug === slug);
+  const [service, setService] = useState<ServiceData | null | undefined>(
+    fallback ?? undefined,
+  );
 
   useEffect(() => {
     window.scrollTo(0, 0);
+
+    if (!slug) {
+      setService(null);
+      return;
+    }
+
+    let cancelled = false;
+    setService(fallback ?? undefined);
+
+    getServiceBySlug(slug)
+      .then((sanityDoc) => {
+        if (cancelled) return;
+        const converted = convertSanityService(sanityDoc);
+        if (converted) {
+          setService(converted);
+        } else if (!fallback) {
+          setService(null);
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        if (!fallback) setService(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // fallback 은 slug 에서 파생되므로 slug 만 deps 로
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
-  if (!service) {
+  // 로딩 중 (Sanity 응답 대기, fallback 도 없음): 빈 화면 + 헤더만
+  if (service === undefined) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <div className="flex-1" />
+        <Footer />
+      </div>
+    );
+  }
+
+  if (service === null) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />

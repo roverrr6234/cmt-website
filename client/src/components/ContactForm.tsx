@@ -3,12 +3,18 @@
  * Sends inquiry via Vercel API Route (backend email sending)
  * Security: Input validation, Rate limiting, XSS prevention with DOMPurify
  */
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { companyInfo, services } from "@/lib/serviceData";
+import {
+  companyInfo as fallbackCompanyInfo,
+  services as fallbackServices,
+} from "@/lib/serviceData";
+import type { ServiceData } from "@/lib/serviceData";
 import { Send, Phone, Mail, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import DOMPurify from "dompurify";
+import { getCompanyInfo, getAllServices } from "@/lib/sanity";
+import { convertSanityServiceList } from "@/lib/sanityToService";
 
 interface ContactFormProps {
   variant?: "full" | "compact";
@@ -77,6 +83,22 @@ export default function ContactForm({
   const [isLoading, setIsLoading] = useState(false);
   const [rateLimitError, setRateLimitError] = useState(false);
   const rateLimitTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  /* Sanity-with-fallback */
+  const [companyPhone, setCompanyPhone] = useState<string>(fallbackCompanyInfo.phone);
+  const [services, setServices] = useState<ServiceData[]>(fallbackServices);
+
+  useEffect(() => {
+    Promise.all([getCompanyInfo(), getAllServices()])
+      .then(([info, srv]) => {
+        if (info?.phone) setCompanyPhone(info.phone);
+        const converted = convertSanityServiceList(srv);
+        if (converted.length > 0) setServices(converted);
+      })
+      .catch(() => {
+        // fallback 유지
+      });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,7 +195,7 @@ export default function ContactForm({
   };
 
   const handleCopyPhone = () => {
-    navigator.clipboard.writeText(companyInfo.phone);
+    navigator.clipboard.writeText(companyPhone);
     toast.success("전화번호가 복사되었습니다.");
   };
 

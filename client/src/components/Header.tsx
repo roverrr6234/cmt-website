@@ -9,8 +9,14 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Phone, Menu, X, ChevronDown, Bell } from "lucide-react";
-import { companyInfo, services } from "@/lib/serviceData";
+import {
+  companyInfo as fallbackCompanyInfo,
+  services as fallbackServices,
+} from "@/lib/serviceData";
+import type { ServiceData } from "@/lib/serviceData";
 import { images } from "@/lib/images";
+import { getCompanyInfo, getAllServices } from "@/lib/sanity";
+import { convertSanityServiceList } from "@/lib/sanityToService";
 
 const BLOG_URL = "https://blog.naver.com/ckt9054";
 
@@ -19,6 +25,22 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [serviceDropdown, setServiceDropdown] = useState(false);
   const [location] = useLocation();
+
+  /* Sanity-with-fallback: 비어있으면 라이브 코드값 그대로 */
+  const [phone, setPhone] = useState<string>(fallbackCompanyInfo.phone);
+  const [services, setServices] = useState<ServiceData[]>(fallbackServices);
+
+  useEffect(() => {
+    Promise.all([getCompanyInfo(), getAllServices()])
+      .then(([info, srv]) => {
+        if (info?.phone) setPhone(info.phone);
+        const converted = convertSanityServiceList(srv);
+        if (converted.length > 0) setServices(converted);
+      })
+      .catch(() => {
+        // fallback 유지
+      });
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -51,14 +73,14 @@ export default function Header() {
 
           {/* Center: Phone Number */}
           <a
-            href={`tel:${companyInfo.phone}`}
+            href={`tel:${phone}`}
             className="flex items-center gap-2 sm:gap-2.5 hover:opacity-80 transition-opacity"
           >
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gold/20 flex items-center justify-center shrink-0">
               <Phone className="w-4 h-4 sm:w-[18px] sm:h-[18px] text-gold" />
             </div>
             <span className="text-navy font-bold text-base sm:text-lg lg:text-xl tracking-wide font-sans">
-              {companyInfo.phone}
+              {phone}
             </span>
           </a>
 
@@ -212,11 +234,11 @@ export default function Header() {
 
               <div className="pt-3 mt-3 border-t border-gray-200">
                 <a
-                  href={`tel:${companyInfo.phone}`}
+                  href={`tel:${phone}`}
                   className="flex items-center gap-3 px-5 py-3 text-gold font-bold text-lg"
                 >
                   <Phone className="w-5 h-5" />
-                  {companyInfo.phone}
+                  {phone}
                 </a>
                 <Link
                   href="/contact"

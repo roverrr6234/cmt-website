@@ -23,7 +23,15 @@ import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import StickyPhone from "@/components/StickyPhone";
 import { companyInfo, services } from "@/lib/serviceData";
+import type { ServiceData } from "@/lib/serviceData";
 import { images } from "@/lib/images";
+import { getHomePage, getAllServices } from "@/lib/sanity";
+import { convertSanityServiceList } from "@/lib/sanityToService";
+
+/** Sanity 값이 비어있지 않으면 그대로, 아니면 fallback. */
+function pick<T>(v: T | null | undefined | "", fallback: T): T {
+  return v !== null && v !== undefined && v !== "" ? v : fallback;
+}
 
 function CountUp({ end, suffix = "" }: { end: number; suffix?: string }) {
   const [count, setCount] = useState(0);
@@ -127,6 +135,61 @@ const whyChooseData = [
 ];
 
 export default function Home() {
+  /**
+   * Sanity 데이터 fetch — 도착 전엔 모든 fallback 으로 렌더되어 화면이 바뀌지 않는다.
+   * 도착 후엔 Sanity 값으로 교체. sync-home-page 로 라이브와 동기화 했으므로
+   * 텍스트가 동일 → 시각 차이 없음. 아버님이 Sanity 에서 수정한 순간만 반영.
+   */
+  const [home, setHome] = useState<any | null>(null);
+  const [sanityServices, setSanityServices] = useState<ServiceData[]>([]);
+
+  useEffect(() => {
+    Promise.all([getHomePage(), getAllServices()])
+      .then(([h, s]) => {
+        setHome(h);
+        const converted = convertSanityServiceList(s);
+        if (converted.length > 0) setSanityServices(converted);
+      })
+      .catch(() => {
+        // 네트워크 오류 등 — fallback 으로 그대로 노출
+      });
+  }, []);
+
+  /* fallback 통합 */
+  const displayServices: ServiceData[] =
+    sanityServices.length > 0 ? sanityServices : services;
+
+  const whyItems =
+    Array.isArray(home?.whyChooseItems) && home.whyChooseItems.length > 0
+      ? home.whyChooseItems
+      : whyChooseData;
+
+  type StatItem = { end: number; suffix: string; label: string };
+  const statsItems: StatItem[] =
+    Array.isArray(home?.stats) && home.stats.length > 0
+      ? home.stats.map((s: any) => ({
+          end: typeof s?.number === "number" ? s.number : 0,
+          suffix: s?.suffix || "",
+          label: s?.label || "",
+        }))
+      : [
+          { end: 20, suffix: "+", label: "년 전문 경력" },
+          { end: 500, suffix: "+", label: "건 프로젝트 수행" },
+          { end: 300, suffix: "+", label: "개 고객사" },
+          { end: 99, suffix: "%", label: "고객 만족도" },
+        ];
+
+  const aboutItems: string[] =
+    Array.isArray(home?.aboutItems) && home.aboutItems.length > 0
+      ? home.aboutItems
+      : [
+          "화학사고예방관리계획서 작성 및 제출 대행",
+          "취급시설 설치·정기·수시검사 수검 지원",
+          "유해화학물질 영업허가 취득 전 과정 대행",
+          "공정안전보고서(PSM) 작성 및 심사 대응",
+          "유해위험방지계획서 작성 및 현장 확인 대응",
+        ];
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -153,14 +216,14 @@ export default function Home() {
           <div className="w-20 h-[3px] bg-gold mb-7 lg:mb-9" />
 
           <p className="text-white/70 text-base sm:text-lg lg:text-xl max-w-2xl mb-8 lg:mb-10 leading-relaxed">
-            화학물질관리법 · 산업안전보건법 전문 컨설팅
+            {pick(home?.heroSubtitle, "화학물질관리법 · 산업안전보건법 전문 컨설팅")}
           </p>
 
           {/* CTA buttons — significantly enlarged */}
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
             <Link href="/contact">
               <Button className="bg-gold hover:bg-gold-dark text-[#000000] font-extrabold px-10 sm:px-12 py-4 sm:py-5 rounded-sm text-base sm:text-lg lg:text-xl shadow-xl hover:shadow-2xl transition-all">
-                무료 상담 신청
+                {pick(home?.heroCtaButton, "무료 상담 신청")}
                 <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 ml-3" />
               </Button>
             </Link>
@@ -185,26 +248,21 @@ export default function Home() {
               <p className="text-gold font-semibold text-sm uppercase tracking-wider mb-4 font-sans">
                 About Us
               </p>
-              <h2 className="text-2xl lg:text-4xl font-bold text-navy mb-6 leading-tight">
-                20년 이상의 EHS 전문 경력,
-                <br />
-                신뢰할 수 있는 파트너
+              <h2 className="text-2xl lg:text-4xl font-bold text-navy mb-6 leading-tight whitespace-pre-line">
+                {pick(
+                  home?.aboutTitle,
+                  "20년 이상의 EHS 전문 경력,\n신뢰할 수 있는 파트너",
+                )}
               </h2>
               <div className="gold-line mb-8" />
-              <p className="text-foreground/80 text-base leading-relaxed mb-6">
-                화학물질관리기술은 화학물질관리법과 산업안전보건법에 근거한 각종
-                인허가 및 안전 컨설팅을 전문으로 수행하는 기업입니다. 신규 화학물질
-                취급 공장 설립부터 기존 사업장의 설비 변경까지, 기업이 필요로 하는
-                모든 화학안전 서비스를 제공합니다.
+              <p className="text-foreground/80 text-base leading-relaxed mb-6 whitespace-pre-line">
+                {pick(
+                  home?.aboutContent,
+                  "화학물질관리기술은 화학물질관리법과 산업안전보건법에 근거한 각종 인허가 및 안전 컨설팅을 전문으로 수행하는 기업입니다. 신규 화학물질 취급 공장 설립부터 기존 사업장의 설비 변경까지, 기업이 필요로 하는 모든 화학안전 서비스를 제공합니다.",
+                )}
               </p>
               <ul className="space-y-3 mb-8">
-                {[
-                  "화학사고예방관리계획서 작성 및 제출 대행",
-                  "취급시설 설치·정기·수시검사 수검 지원",
-                  "유해화학물질 영업허가 취득 전 과정 대행",
-                  "공정안전보고서(PSM) 작성 및 심사 대응",
-                  "유해위험방지계획서 작성 및 현장 확인 대응",
-                ].map((item, i) => (
+                {aboutItems.map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-gold shrink-0 mt-0.5" />
                     <span className="text-sm text-foreground/80">{item}</span>
@@ -213,7 +271,7 @@ export default function Home() {
               </ul>
               <Link href="/contact">
                 <Button className="bg-navy hover:bg-navy-light text-white px-8 py-3 rounded-sm">
-                  상담 문의하기
+                  {pick(home?.aboutButtonText, "상담 문의하기")}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
@@ -226,12 +284,7 @@ export default function Home() {
       <section className="bg-navy py-16 lg:py-20">
         <div className="container">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-            {[
-              { end: 20, suffix: "+", label: "년 전문 경력" },
-              { end: 500, suffix: "+", label: "건 프로젝트 수행" },
-              { end: 300, suffix: "+", label: "개 고객사" },
-              { end: 99, suffix: "%", label: "고객 만족도" },
-            ].map((stat, i) => (
+            {statsItems.map((stat, i) => (
               <FadeInSection key={i} delay={i * 150}>
                 <div className="text-center">
                   <CountUp end={stat.end} suffix={stat.suffix} />
@@ -252,18 +305,20 @@ export default function Home() {
                 Our Services
               </p>
               <h2 className="text-2xl lg:text-4xl font-bold text-navy mb-6">
-                5대 핵심 서비스
+                {pick(home?.servicesTitle, "5대 핵심 서비스")}
               </h2>
               <div className="gold-line mx-auto mb-6" />
-              <p className="text-foreground/70 text-base leading-relaxed">
-                화학물질관리법과 산업안전보건법에 근거한 전문 컨설팅으로
-                귀사의 법적 의무 이행을 완벽하게 지원합니다.
+              <p className="text-foreground/70 text-base leading-relaxed whitespace-pre-line">
+                {pick(
+                  home?.servicesDescription,
+                  "화학물질관리법과 산업안전보건법에 근거한 전문 컨설팅으로 귀사의 법적 의무 이행을 완벽하게 지원합니다.",
+                )}
               </p>
             </div>
           </FadeInSection>
 
           <div className="space-y-6">
-            {services.map((s, i) => {
+            {displayServices.map((s, i) => {
               const Icon = s.icon;
               return (
                 <FadeInSection key={s.id} delay={i * 100}>
@@ -313,15 +368,16 @@ export default function Home() {
                 Why Choose Us
               </p>
               <h2 className="text-2xl lg:text-4xl font-bold text-navy mb-6">
-                화학물질관리기술을 선택하는 이유
+                {pick(home?.whyChooseTitle, "화학물질관리기술을 선택하는 이유")}
               </h2>
               <div className="gold-line mx-auto" />
             </div>
           </FadeInSection>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {whyChooseData.map((item, i) => {
-              const Icon = item.icon;
+            {whyItems.map((item: any, i: number) => {
+              // 아이콘은 Sanity 에 저장 안 되므로 fallback 의 같은 인덱스에서 가져온다.
+              const Icon = (whyChooseData[i] || whyChooseData[0]).icon;
               return (
                 <FadeInSection key={i} delay={i * 100}>
                   <div className="p-8 border border-border/50 rounded-sm hover:border-gold/30 hover:shadow-lg transition-all duration-300 group h-full">
@@ -352,17 +408,18 @@ export default function Home() {
         <div className="relative container text-center">
           <FadeInSection>
             <h2 className="text-2xl lg:text-4xl font-bold text-white mb-6">
-              화학안전 인허가, 전문가에게 맡기세요
+              {pick(home?.ctaTitle, "화학안전 인허가, 전문가에게 맡기세요")}
             </h2>
-            <p className="text-white/70 text-base lg:text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
-              복잡한 법규와 절차, 화학물질관리기술이 함께합니다.
-              <br />
-              무료 상담을 통해 귀사에 필요한 서비스를 확인하세요.
+            <p className="text-white/70 text-base lg:text-lg max-w-2xl mx-auto mb-10 leading-relaxed whitespace-pre-line">
+              {pick(
+                home?.ctaDescription,
+                "복잡한 법규와 절차, 화학물질관리기술이 함께합니다.\n무료 상담을 통해 귀사에 필요한 서비스를 확인하세요.",
+              )}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/contact">
                 <Button className="bg-gold hover:bg-gold-dark text-navy font-bold px-10 py-4 rounded-sm text-base sm:text-lg shadow-xl">
-                  무료 상담 신청
+                  {pick(home?.ctaButtonText, "무료 상담 신청")}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
@@ -390,12 +447,14 @@ export default function Home() {
                   Contact Us
                 </p>
                 <h2 className="text-2xl lg:text-3xl font-bold text-navy mb-6">
-                  상담 신청
+                  {pick(home?.contactTitle, "상담 신청")}
                 </h2>
                 <div className="gold-line mb-8" />
-                <p className="text-foreground/70 text-base leading-relaxed mb-8">
-                  화학안전 인허가에 관한 궁금한 점이 있으시면 언제든지 문의해 주세요.
-                  전문 컨설턴트가 빠르게 답변 드리겠습니다.
+                <p className="text-foreground/70 text-base leading-relaxed mb-8 whitespace-pre-line">
+                  {pick(
+                    home?.contactDescription,
+                    "화학안전 인허가에 관한 궁금한 점이 있으시면 언제든지 문의해 주세요. 전문 컨설턴트가 빠르게 답변 드리겠습니다.",
+                  )}
                 </p>
                 <div className="space-y-4">
                   <a

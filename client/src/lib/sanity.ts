@@ -58,28 +58,48 @@ export async function getSiteFooter() {
   }
 }
 
+/**
+ * 서비스 도큐먼트 공통 필드.
+ * sections 는 모든 섹션 블록(_type 별 다른 필드)을 포함하도록 모두 가져온다.
+ * 이는 GROQ 의 기본 동작 — 명시 projection 없이 sections[] 만 쓰면 nested 객체의 모든 필드 반환.
+ */
+const SERVICE_FIELDS = `
+  _id,
+  title,
+  shortTitle,
+  slug,
+  iconName,
+  description,
+  law,
+  lawArticle,
+  overview,
+  tasks,
+  targets,
+  documents,
+  additionalInfo,
+  procedure[]{ step, detail },
+  cardImage,
+  sections[]{
+    _type,
+    _key,
+    title,
+    content,
+    alertType, alertTitle, alertContent,
+    tableTitle, headers,
+    rows[]{ _type, _key, cells, label, values },
+    footnote,
+    listTitle, items,
+    diagramId, image, alt, caption
+  },
+  penalty,
+  sortOrder
+`;
+
 // ── 서비스 목록 (모든 서비스) ──
 export async function getAllServices() {
   try {
     return await sanityClient.fetch(
-      `*[_type == "service"] | order(sortOrder asc) {
-        _id,
-        title,
-        shortTitle,
-        slug,
-        description,
-        law,
-        lawArticle,
-        overview,
-        tasks,
-        targets,
-        documents,
-        additionalInfo,
-        procedure,
-        cardImage,
-        sections,
-        penalty
-      }`
+      `*[_type == "service"] | order(sortOrder asc) { ${SERVICE_FIELDS} }`,
     );
   } catch (error) {
     console.error("Failed to fetch services:", error);
@@ -91,25 +111,8 @@ export async function getAllServices() {
 export async function getServiceBySlug(slug: string) {
   try {
     return await sanityClient.fetch(
-      `*[_type == "service" && slug.current == $slug][0] {
-        _id,
-        title,
-        shortTitle,
-        slug,
-        description,
-        law,
-        lawArticle,
-        overview,
-        tasks,
-        targets,
-        documents,
-        additionalInfo,
-        procedure,
-        cardImage,
-        sections,
-        penalty
-      }`,
-      { slug }
+      `*[_type == "service" && slug.current == $slug][0] { ${SERVICE_FIELDS} }`,
+      { slug },
     );
   } catch (error) {
     console.error("Failed to fetch service by slug:", error);
@@ -128,7 +131,8 @@ export async function getAllNotices() {
         excerpt,
         content,
         publishedAt,
-        isPinned
+        isPinned,
+        attachments[]{ _key, _type, description, asset }
       }`
     );
   } catch (error) {
@@ -146,7 +150,8 @@ export const NOTICES_QUERY = `*[_type == "notice"] | order(isPinned desc, publis
   excerpt,
   "body": content,
   publishedAt,
-  isPinned
+  isPinned,
+  attachments[]{ _key, _type, description, asset }
 }`;
 
 export type SanityNotice = {
@@ -184,7 +189,8 @@ export async function getNoticeById(id: string) {
         excerpt,
         content,
         publishedAt,
-        isPinned
+        isPinned,
+        attachments[]{ _key, _type, description, asset }
       }`,
       { id }
     );
