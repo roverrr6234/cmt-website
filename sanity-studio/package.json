@@ -1,0 +1,25 @@
+{
+  "name": "cmt-sanity-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "화학물질관리기술(CMT) Sanity Studio — 5대 서비스 + 무한 확장 + 사이트 콘텐츠",
+  "scripts": {
+    "dev": "sanity dev",
+    "start": "sanity start",
+    "build": "sanity build",
+    "deploy": "sanity deploy",
+    "deploy-graphql": "sanity graphql deploy"
+  },
+  "dependencies": {
+    "@sanity/vision": "^3.62.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sanity": "^3.62.3",
+    "styled-components": "^6.1.15"
+  },
+  "devDependencies": {
+    "@sanity/types": "^3.62.3",
+    "@types/react": "^18.3.12",
+    "typescript": "^5.6.3"
+  }
+}
