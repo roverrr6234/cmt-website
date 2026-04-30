@@ -1,5 +1,5 @@
 import { createClient } from "@sanity/client";
-import { createImageUrlBuilder } from "@sanity/image-url";
+import imageUrlBuilder from "@sanity/image-url";
 
 export const sanityClient = createClient({
   projectId: "7l80ou25",
@@ -8,7 +8,7 @@ export const sanityClient = createClient({
   useCdn: true,
 });
 
-const builder = createImageUrlBuilder(sanityClient);
+const builder = imageUrlBuilder(sanityClient);
 
 /**
  * Sanity 이미지 URL 빌더
