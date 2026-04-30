@@ -26,11 +26,11 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import StickyPhone from "@/components/StickyPhone";
-import { services, companyInfo as fallbackCompanyInfo } from "@/lib/serviceData";
+import { services, companyInfo } from "@/lib/serviceData";
 import type { ServiceSection, ServiceData } from "@/lib/serviceData";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { diagramComponents } from "@/components/diagrams";
-import { getServiceBySlug, getCompanyInfo } from "@/lib/sanity";
+import { getServiceBySlug } from "@/lib/sanity";
 import { convertSanityService } from "@/lib/sanityToService";
 
 /* ── Breadcrumb with hover dropdown ── */
@@ -404,17 +404,6 @@ export default function ServiceDetail() {
   const [service, setService] = useState<ServiceData | null | undefined>(
     fallback ?? undefined,
   );
-  const [companyPhone, setCompanyPhone] = useState<string>(fallbackCompanyInfo.phone);
-
-  useEffect(() => {
-    getCompanyInfo()
-      .then((info) => {
-        if (info?.phone) setCompanyPhone(info.phone);
-      })
-      .catch(() => {
-        // fallback 유지
-      });
-  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -778,11 +767,11 @@ export default function ServiceDetail() {
                     </Button>
                   </Link>
                   <a
-                    href={`tel:${companyPhone}`}
+                    href={`tel:${companyInfo.phone}`}
                     className="inline-flex items-center gap-2 text-white/80 hover:text-gold transition-colors text-sm"
                   >
                     <Phone className="w-4 h-4" />
-                    {companyPhone}
+                    {companyInfo.phone}
                   </a>
                 </div>
               </div>
@@ -849,12 +838,12 @@ export default function ServiceDetail() {
 
               {/* Quick Contact */}
               <a
-                href={`tel:${companyPhone}`}
+                href={`tel:${companyInfo.phone}`}
                 className="block bg-navy text-white p-6 rounded-sm hover:bg-navy-light transition-colors"
               >
                 <Phone className="w-6 h-6 text-gold mb-3" />
                 <p className="text-sm text-white/70 mb-1">전화 상담</p>
-                <p className="font-bold text-lg">{companyPhone}</p>
+                <p className="font-bold text-lg">{companyInfo.phone}</p>
               </a>
             </div>
           </div>

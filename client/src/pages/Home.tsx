@@ -207,10 +207,9 @@ export default function Home() {
         <div className="relative container py-20 sm:py-24 lg:py-28">
           {/* Slogan — bigger, bolder */}
           <h1 className="text-[2rem] sm:text-4xl lg:text-[3.2rem] xl:text-[3.8rem] font-extrabold text-white leading-[1.2] mb-6 lg:mb-8 max-w-3xl drop-shadow-xl">
-            {pick(home?.heroTitleTop, "화학사고 예방을 최선으로,")}
+            화학사고 예방을 최선으로,
             <br />
-            <span className="text-gold">{pick(home?.heroTitleHighlight, "내 회사처럼")}</span>
-            {pick(home?.heroTitleSuffix, " 일하는 파트너")}
+            <span className="text-gold">내 회사처럼</span> 일하는 파트너
           </h1>
 
           {/* Thin gold divider */}
