@@ -3,9 +3,9 @@ import type { StructureBuilder } from "sanity/structure";
 /**
  * Sanity Studio 좌측 메뉴(Desk) 구조.
  *
- * - ⭐ 주요업무 관리: 가장 상단. 5대 서비스 + 무한 확장 (새 서비스 추가 가능).
- * - 사이트 콘텐츠 6종은 싱글톤(고정 ID)으로 1개씩만 존재 — "새로 만들기" 버튼이 안 뜸.
- * - 알림마당(공지글)은 자유롭게 여러 개 추가 가능.
+ * - ⭐ 서비스 관리 (5대 서비스): 가장 상단. 클릭하면 서비스 도큐먼트 목록.
+ * - 사이트 콘텐츠 4종은 싱글톤(고정 ID)으로 1개씩만 존재 — "새로 만들기" 버튼이 안 뜸.
+ * - 알림마당은 자유롭게 여러 개 추가 가능.
  *
  * 메뉴 텍스트와 이모지는 아버님이 한눈에 찾을 수 있도록 구성.
  */
@@ -17,10 +17,10 @@ export const deskStructure = (S: StructureBuilder) =>
       /* ⭐ 주요업무 관리 — 가장 상단 */
       S.listItem()
         .id("services")
-        .title("⭐ 주요업무 관리 (5대 서비스 + 추가)")
+        .title("⭐ 주요업무 관리")
         .child(
           S.documentTypeList("service")
-            .title("주요업무 목록 (홈페이지 카드 / 상세 페이지)")
+            .title("주요업무 목록")
             .defaultOrdering([{ field: "sortOrder", direction: "asc" }]),
         ),
 
@@ -31,14 +31,6 @@ export const deskStructure = (S: StructureBuilder) =>
         .id("homePage")
         .title("🏠 홈페이지")
         .child(S.document().schemaType("homePage").documentId("homePage")),
-      S.listItem()
-        .id("contactPage")
-        .title("💬 상담 페이지")
-        .child(S.document().schemaType("contactPage").documentId("contactPage")),
-      S.listItem()
-        .id("noticesPage")
-        .title("📢 알림마당 페이지(라벨)")
-        .child(S.document().schemaType("noticesPage").documentId("noticesPage")),
       S.listItem()
         .id("companyInfo")
         .title("🏢 회사 정보")
@@ -54,10 +46,10 @@ export const deskStructure = (S: StructureBuilder) =>
 
       S.divider(),
 
-      /* 알림마당 (공지글) */
+      /* 알림마당 */
       S.listItem()
         .id("notices")
-        .title("📰 알림마당 (공지글)")
+        .title("📢 알림마당")
         .child(
           S.documentTypeList("notice")
             .title("공지사항")

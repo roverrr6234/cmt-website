@@ -11,7 +11,7 @@ sanity-studio/
 ├── .env                    ← 배포 토큰 (gitignored)
 ├── .gitignore
 ├── package.json
-├── sanity.config.ts        ← project: 7l80ou25, dataset: production
+├── sanity.config.ts        ← project: xwuem73x, dataset: production
 ├── sanity.cli.ts
 ├── tsconfig.json
 ├── deskStructure.ts        ← 좌측 메뉴 구조

@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envText = fs.readFileSync(path.join(__dirname, "..", ".env"), "utf-8");
 const TOKEN = envText.match(/SANITY_AUTH_TOKEN=(.+)/)?.[1].trim();
-const PROJECT_ID = "7l80ou25";
+const PROJECT_ID = "xwuem73x";
 const DATASET = "production";
 if (!TOKEN) throw new Error("Missing SANITY_AUTH_TOKEN");
 

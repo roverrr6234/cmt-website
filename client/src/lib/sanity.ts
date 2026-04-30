@@ -2,7 +2,7 @@ import { createClient } from "@sanity/client";
 import imageUrlBuilder from "@sanity/image-url";
 
 export const sanityClient = createClient({
-  projectId: "7l80ou25",
+  projectId: "xwuem73x",
   dataset: "production",
   apiVersion: "2026-04-18",
   useCdn: true,
@@ -54,26 +54,6 @@ export async function getSiteFooter() {
     return await sanityClient.fetch(`*[_type == "siteFooter"][0]`);
   } catch (error) {
     console.error("Failed to fetch siteFooter:", error);
-    return null;
-  }
-}
-
-// ── 상담 페이지 ──
-export async function getContactPage() {
-  try {
-    return await sanityClient.fetch(`*[_type == "contactPage"][0]`);
-  } catch (error) {
-    console.error("Failed to fetch contactPage:", error);
-    return null;
-  }
-}
-
-// ── 알림마당 페이지 라벨 ──
-export async function getNoticesPage() {
-  try {
-    return await sanityClient.fetch(`*[_type == "noticesPage"][0]`);
-  } catch (error) {
-    console.error("Failed to fetch noticesPage:", error);
     return null;
   }
 }
@@ -189,13 +169,13 @@ export function sanityImageUrl(ref: string, width?: number) {
   if (!ref) return "";
   const [, id, dimensions, format] = ref.split("-");
   const w = width ? `?w=${width}` : "";
-  return `https://cdn.sanity.io/images/7l80ou25/production/${id}-${dimensions}.${format}${w}`;
+  return `https://cdn.sanity.io/images/xwuem73x/production/${id}-${dimensions}.${format}${w}`;
 }
 
 export function sanityFileUrl(ref: string) {
   if (!ref) return "";
   const [, id, ext] = ref.split("-");
-  return `https://cdn.sanity.io/files/7l80ou25/production/${id}.${ext}`;
+  return `https://cdn.sanity.io/files/xwuem73x/production/${id}.${ext}`;
 }
 
 // ── 특정 공지사항 ──
