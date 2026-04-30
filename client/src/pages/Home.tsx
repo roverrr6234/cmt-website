@@ -205,12 +205,19 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/95 via-[#000000]/55 to-[#000000]/25" />
 
         <div className="relative container py-20 sm:py-24 lg:py-28">
-          {/* Slogan — bigger, bolder */}
-          <h1 className="text-[2rem] sm:text-4xl lg:text-[3.2rem] xl:text-[3.8rem] font-extrabold text-white leading-[1.2] mb-6 lg:mb-8 max-w-3xl drop-shadow-xl">
-            화학사고 예방을 최선으로,
-            <br />
-            <span className="text-gold">내 회사처럼</span> 일하는 파트너
-          </h1>
+          {/* Slogan — bigger, bolder. Sanity heroTitle 있으면 그대로 사용,
+              없을 땐 기존 디자인(두 줄 + gold 강조) 유지. */}
+          {home?.heroTitle ? (
+            <h1 className="text-[2rem] sm:text-4xl lg:text-[3.2rem] xl:text-[3.8rem] font-extrabold text-white leading-[1.2] mb-6 lg:mb-8 max-w-3xl drop-shadow-xl whitespace-pre-line">
+              {home.heroTitle}
+            </h1>
+          ) : (
+            <h1 className="text-[2rem] sm:text-4xl lg:text-[3.2rem] xl:text-[3.8rem] font-extrabold text-white leading-[1.2] mb-6 lg:mb-8 max-w-3xl drop-shadow-xl">
+              화학사고 예방을 최선으로,
+              <br />
+              <span className="text-gold">내 회사처럼</span> 일하는 파트너
+            </h1>
+          )}
 
           {/* Thin gold divider */}
           <div className="w-20 h-[3px] bg-gold mb-7 lg:mb-9" />
