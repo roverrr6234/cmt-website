@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git ls-remote *)",
+      "Bash(git fetch *)",
+      "Bash(curl -sS \"https://7l80ou25.api.sanity.io/v2021-10-21/data/query/production?query=%2A%5B%5D._type\")",
+      "Bash(curl -sS --get \"https://7l80ou25.api.sanity.io/v2021-10-21/data/query/production\" --data-urlencode 'query=*[_type==\"homePage\"][0]')",
+      "Bash(curl -sS --get \"https://7l80ou25.api.sanity.io/v2021-10-21/data/query/production\" --data-urlencode 'query=*[_type==\"companyInfo\"][0]')",
+      "Bash(npx tsc *)",
+      "Bash(pnpm run *)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(curl -sS --get \"https://7l80ou25.api.sanity.io/v2021-10-21/data/query/production\" --data-urlencode 'query=*[_type==\"notice\"][0]')",
+      "Bash(npm install *)",
+      "Bash(npx sanity *)",
+      "Bash(npm ls *)",
+      "Bash(curl -sS \"https://cmt-busan.sanity.studio\" -I)",
+      "Bash(curl -sS \"https://ckt-website-studio.sanity.studio\" -I)",
+      "Bash(node scripts/seed-services.mjs)",
+      "Bash(node scripts/sync-home-page.mjs)",
+      "Bash(node scripts/sync-company-info.mjs)",
+      "Bash(npx -y pnpm install --silent)",
+      "Bash(node_modules/.bin/vite build *)",
+      "Bash(curl -sS https://cmtbusan.kr/ -o /tmp/live.html)",
+      "Read(//tmp/**)"
+    ]
+  }
+}

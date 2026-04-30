@@ -2,7 +2,7 @@ import { createClient } from "@sanity/client";
 import imageUrlBuilder from "@sanity/image-url";
 
 export const sanityClient = createClient({
-  projectId: "7l80ou25",
+  projectId: "xwuem73x",
   dataset: "production",
   apiVersion: "2026-04-18",
   useCdn: true,
@@ -169,13 +169,13 @@ export function sanityImageUrl(ref: string, width?: number) {
   if (!ref) return "";
   const [, id, dimensions, format] = ref.split("-");
   const w = width ? `?w=${width}` : "";
-  return `https://cdn.sanity.io/images/7l80ou25/production/${id}-${dimensions}.${format}${w}`;
+  return `https://cdn.sanity.io/images/xwuem73x/production/${id}-${dimensions}.${format}${w}`;
 }
 
 export function sanityFileUrl(ref: string) {
   if (!ref) return "";
   const [, id, ext] = ref.split("-");
-  return `https://cdn.sanity.io/files/7l80ou25/production/${id}.${ext}`;
+  return `https://cdn.sanity.io/files/xwuem73x/production/${id}.${ext}`;
 }
 
 // ── 특정 공지사항 ──

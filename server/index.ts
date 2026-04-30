@@ -68,8 +68,8 @@ function securityHeadersMiddleware(req: express.Request, res: express.Response, 
   // Content-Security-Policy: XSS 및 인젝션 공격 방지
   // 프로덕션 환경에서는 더 엄격한 정책 적용
   const cspPolicy = process.env.NODE_ENV === 'production'
-    ? "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://7l80ou25.api.sanity.io https://*.emailjs.com; frame-ancestors 'none';"
-    : "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://7l80ou25.api.sanity.io https://*.emailjs.com; frame-ancestors 'none';";
+    ? "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://xwuem73x.api.sanity.io https://*.emailjs.com; frame-ancestors 'none';"
+    : "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://xwuem73x.api.sanity.io https://*.emailjs.com; frame-ancestors 'none';";
 
   res.setHeader('Content-Security-Policy', cspPolicy);
 
