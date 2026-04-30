@@ -5,5 +5,5 @@ export default defineCliConfig({
     projectId: "7l80ou25",
     dataset: "production",
   },
-  studioHost: "cmt-busan",
+  studioHost: "cmtbusan-cms",
 });
