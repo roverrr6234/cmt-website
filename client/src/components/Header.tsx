@@ -15,10 +15,14 @@ import {
 } from "@/lib/serviceData";
 import type { ServiceData } from "@/lib/serviceData";
 import { images } from "@/lib/images";
-import { getCompanyInfo, getAllServices } from "@/lib/sanity";
+import { getCompanyInfo, getAllServices, getSiteHeader } from "@/lib/sanity";
 import { convertSanityServiceList } from "@/lib/sanityToService";
 
-const BLOG_URL = "https://blog.naver.com/ckt9054";
+const FALLBACK_BLOG_URL = "https://blog.naver.com/ckt9054";
+
+function pick<T>(v: T | null | undefined | "", fallback: T): T {
+  return v !== null && v !== undefined && v !== "" ? v : fallback;
+}
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -29,18 +33,29 @@ export default function Header() {
   /* Sanity-with-fallback: 비어있으면 라이브 코드값 그대로 */
   const [phone, setPhone] = useState<string>(fallbackCompanyInfo.phone);
   const [services, setServices] = useState<ServiceData[]>(fallbackServices);
+  const [header, setHeader] = useState<any | null>(null);
 
   useEffect(() => {
-    Promise.all([getCompanyInfo(), getAllServices()])
-      .then(([info, srv]) => {
+    Promise.all([getCompanyInfo(), getAllServices(), getSiteHeader()])
+      .then(([info, srv, hdr]) => {
         if (info?.phone) setPhone(info.phone);
         const converted = convertSanityServiceList(srv);
         if (converted.length > 0) setServices(converted);
+        setHeader(hdr);
       })
       .catch(() => {
         // fallback 유지
       });
   }, []);
+
+  const logoAlt = pick(header?.logoAlt, "화학물질관리기술 로고");
+  const homeLabel = pick(header?.homeLabel, "홈");
+  const servicesMenuLabel = pick(header?.servicesMenuLabel, "주요 업무");
+  const noticesLabel = pick(header?.noticesLabel, "알림마당");
+  const blogLabel = pick(header?.blogLabel, "블로그");
+  const contactLabel = pick(header?.contactLabel, "상담 신청");
+  const ctaButtonShort = pick(header?.ctaButtonShort, "무료 상담 신청");
+  const blogUrl = pick(header?.blogUrl, FALLBACK_BLOG_URL);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -66,7 +81,7 @@ export default function Header() {
           <Link href="/" className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             <img
               src={images.logo}
-              alt="화학물질관리기술 로고"
+              alt={logoAlt}
               className="h-11 sm:h-[52px] lg:h-[60px] w-auto object-contain"
             />
           </Link>
@@ -96,7 +111,7 @@ export default function Header() {
               }`}
             >
               <Bell className="w-4 h-4" />
-              <span>알림마당</span>
+              <span>{noticesLabel}</span>
             </Link>
 
             {/* Hamburger Menu */}
@@ -159,7 +174,7 @@ export default function Header() {
                     : "text-navy/80 hover:text-gold hover:bg-navy/5"
                 }`}
               >
-                홈
+                {homeLabel}
               </Link>
 
               <div>
@@ -171,7 +186,7 @@ export default function Header() {
                       : "text-navy/80 hover:text-gold hover:bg-navy/5"
                   }`}
                 >
-                  주요 업무
+                  {servicesMenuLabel}
                   <ChevronDown
                     className={`w-4 h-4 transition-transform ${
                       serviceDropdown ? "rotate-180" : ""
@@ -209,16 +224,16 @@ export default function Header() {
                 }`}
               >
                 <Bell className="w-4 h-4" />
-                알림마당
+                {noticesLabel}
               </Link>
 
               <a
-                href={BLOG_URL}
+                href={blogUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block px-5 py-3 text-sm font-medium rounded-sm transition-colors text-navy/80 hover:text-gold hover:bg-navy/5"
               >
-                블로그
+                {blogLabel}
               </a>
 
               <Link
@@ -229,7 +244,7 @@ export default function Header() {
                     : "text-navy/80 hover:text-gold hover:bg-navy/5"
                 }`}
               >
-                상담 신청
+                {contactLabel}
               </Link>
 
               <div className="pt-3 mt-3 border-t border-gray-200">
@@ -244,7 +259,7 @@ export default function Header() {
                   href="/contact"
                   className="block mx-5 mt-2 px-6 py-3 bg-gold text-navy text-sm font-bold rounded-sm text-center hover:bg-gold-light transition-colors"
                 >
-                  무료 상담 신청
+                  {ctaButtonShort}
                 </Link>
               </div>
             </div>

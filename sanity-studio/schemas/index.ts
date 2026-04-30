@@ -11,6 +11,8 @@ import { companyInfo } from "./documents/companyInfo";
 import { siteHeader } from "./documents/siteHeader";
 import { siteFooter } from "./documents/siteFooter";
 import { notice } from "./documents/notice";
+import { contactPage } from "./documents/contactPage";
+import { noticesPage } from "./documents/noticesPage";
 
 /* ── Object types ── */
 import { procedureStep } from "./objects/procedureStep";
@@ -34,6 +36,8 @@ export const allSchemaTypes = [
   siteHeader,
   siteFooter,
   notice,
+  contactPage,
+  noticesPage,
 
   /* Reusable objects (필드 안에서 참조됨) */
   procedureStep,

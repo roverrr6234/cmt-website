@@ -46,6 +46,15 @@ export const siteFooter = defineType({
     defineField({ name: "servicesTitle", title: "'주요 업무' 섹션 제목", type: "string", group: "labels" }),
     defineField({ name: "quickLinksTitle", title: "'바로가기' 섹션 제목", type: "string", group: "labels" }),
     defineField({ name: "copyrightText", title: "카피라이트 문구", type: "string", group: "labels" }),
+    defineField({
+      name: "seoBottomText",
+      title: "푸터 하단 SEO 텍스트",
+      type: "text",
+      rows: 2,
+      description:
+        '카피라이트 옆에 표시되는 검색엔진용 한 줄. 예: "부산, 울산, 경남 포함 전국 화학안전 컨설팅 | 화학사고예방관리계획서 | ..."',
+      group: "labels",
+    }),
   ],
   preview: {
     prepare: () => ({ title: "🔻 사이트 푸터" }),

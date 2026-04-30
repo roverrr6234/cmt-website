@@ -32,6 +32,14 @@ export const deskStructure = (S: StructureBuilder) =>
         .title("🏠 홈페이지")
         .child(S.document().schemaType("homePage").documentId("homePage")),
       S.listItem()
+        .id("contactPage")
+        .title("📞 상담 신청 페이지")
+        .child(S.document().schemaType("contactPage").documentId("contactPage")),
+      S.listItem()
+        .id("noticesPage")
+        .title("📢 알림마당 페이지")
+        .child(S.document().schemaType("noticesPage").documentId("noticesPage")),
+      S.listItem()
         .id("companyInfo")
         .title("🏢 회사 정보")
         .child(S.document().schemaType("companyInfo").documentId("companyInfo")),
@@ -46,10 +54,10 @@ export const deskStructure = (S: StructureBuilder) =>
 
       S.divider(),
 
-      /* 알림마당 */
+      /* 알림마당 공지사항 */
       S.listItem()
         .id("notices")
-        .title("📢 알림마당")
+        .title("📰 공지사항 목록")
         .child(
           S.documentTypeList("notice")
             .title("공지사항")

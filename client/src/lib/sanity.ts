@@ -58,6 +58,26 @@ export async function getSiteFooter() {
   }
 }
 
+// ── 상담 신청 페이지 ──
+export async function getContactPage() {
+  try {
+    return await sanityClient.fetch(`*[_type == "contactPage"][0]`);
+  } catch (error) {
+    console.error("Failed to fetch contactPage:", error);
+    return null;
+  }
+}
+
+// ── 알림마당 페이지 ──
+export async function getNoticesPage() {
+  try {
+    return await sanityClient.fetch(`*[_type == "noticesPage"][0]`);
+  } catch (error) {
+    console.error("Failed to fetch noticesPage:", error);
+    return null;
+  }
+}
+
 /**
  * 서비스 도큐먼트 공통 필드.
  * sections 는 모든 섹션 블록(_type 별 다른 필드)을 포함하도록 모두 가져온다.

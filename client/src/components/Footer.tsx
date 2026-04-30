@@ -61,6 +61,10 @@ export default function Footer() {
     footer?.copyrightText,
     `© ${new Date().getFullYear()} 화학물질관리기술. All rights reserved.`,
   );
+  const seoBottomText = pick(
+    footer?.seoBottomText,
+    "부산, 울산, 경남 포함 전국 화학안전 컨설팅 | 화학사고예방관리계획서 | 설치검사 | 영업허가 | PSM | 유해위험방지계획서",
+  );
 
   /* 바로가기 — Sanity quickLinks 가 있으면 사용, 없으면 기본 4개 */
   const quickLinks: Array<{ label: string; link: string; isExternal?: boolean }> =
@@ -187,8 +191,8 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="container py-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-white/40 text-xs">{copyrightText}</p>
-          <p className="text-white/40 text-xs text-center">
-            부산, 울산, 경남 포함 전국 화학안전 컨설팅 | 화학사고예방관리계획서 | 설치검사 | 영업허가 | PSM | 유해위험방지계획서
+          <p className="text-white/40 text-xs text-center whitespace-pre-line">
+            {seoBottomText}
           </p>
         </div>
       </div>

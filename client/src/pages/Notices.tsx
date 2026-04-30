@@ -26,8 +26,13 @@ import {
   sanityImageUrl,
   sanityFileUrl,
   NOTICES_QUERY,
+  getNoticesPage,
   type SanityNotice,
 } from "@/lib/sanity";
+
+function pick<T>(v: T | null | undefined | "", fallback: T): T {
+  return v !== null && v !== undefined && v !== "" ? v : fallback;
+}
 
 const ITEMS_PER_PAGE = 10;
 
@@ -141,6 +146,23 @@ export default function Notices() {
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [pageMeta, setPageMeta] = useState<any | null>(null);
+
+  useEffect(() => {
+    getNoticesPage()
+      .then((p) => setPageMeta(p))
+      .catch(() => {
+        // fallback 유지
+      });
+  }, []);
+
+  const heroTitle = pick(pageMeta?.heroTitle, "알림마당");
+  const heroDescription = pick(
+    pageMeta?.heroDescription,
+    "법령 개정, 공지사항, 업계 동향 등 화학물질 관리에 필요한 최신 정보를 안내합니다.",
+  );
+  const categoryAllLabel = pick(pageMeta?.categoryAllLabel, "전체");
+  const emptyStateText = pick(pageMeta?.emptyStateText, "공지사항이 없습니다.");
 
   const fetchNotices = useCallback(async () => {
     setLoading(true);
@@ -211,11 +233,10 @@ export default function Notices() {
       <section className="bg-[#0a1628] pt-28 pb-14 lg:pt-32 lg:pb-16">
         <div className="max-w-5xl mx-auto px-4 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-3">
-            알림마당
+            {heroTitle}
           </h1>
-          <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto">
-            법령 개정, 공지사항, 업계 동향 등 화학물질 관리에 필요한 최신 정보를
-            안내합니다.
+          <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto whitespace-pre-line">
+            {heroDescription}
           </p>
         </div>
       </section>
@@ -253,7 +274,7 @@ export default function Notices() {
                   : "bg-white text-gray-600 border-gray-200 hover:bg-gray-100"
               }`}
             >
-              {cat}
+              {cat === "전체" ? categoryAllLabel : cat}
             </button>
           ))}
         </div>
@@ -351,7 +372,7 @@ export default function Notices() {
         {!loading && allDisplayed.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20">
             <FileText className="w-12 h-12 text-gray-300 mb-4" />
-            <p className="text-gray-500">공지사항이 없습니다.</p>
+            <p className="text-gray-500">{emptyStateText}</p>
           </div>
         )}
 

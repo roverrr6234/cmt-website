@@ -23,7 +23,35 @@ export const homePage = defineType({
   ],
   fields: [
     /* ── Hero ── */
-    defineField({ name: "heroTitle", title: "Hero 제목 (큰 슬로건)", type: "string", group: "hero" }),
+    defineField({
+      name: "heroTitleTop",
+      title: "Hero 제목 — 첫 줄",
+      description: '예: "화학사고 예방을 최선으로,"',
+      type: "string",
+      group: "hero",
+    }),
+    defineField({
+      name: "heroTitleHighlight",
+      title: "Hero 제목 — 강조어 (금색으로 표시)",
+      description: '두 번째 줄의 앞부분. 예: "내 회사처럼"',
+      type: "string",
+      group: "hero",
+    }),
+    defineField({
+      name: "heroTitleSuffix",
+      title: "Hero 제목 — 강조어 뒤 텍스트",
+      description: '두 번째 줄의 강조어 뒤. 예: " 일하는 파트너"',
+      type: "string",
+      group: "hero",
+    }),
+    defineField({
+      name: "heroTitle",
+      title: "Hero 제목 (구버전 — 사용 안 함)",
+      description: "위의 3개 필드(첫 줄 / 강조어 / 강조어 뒤)를 사용하세요.",
+      type: "string",
+      hidden: true,
+      group: "hero",
+    }),
     defineField({ name: "heroSubtitle", title: "Hero 부제", type: "text", rows: 2, group: "hero" }),
     defineField({ name: "heroCtaButton", title: "Hero CTA 버튼 텍스트", type: "string", group: "hero" }),
 
