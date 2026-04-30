@@ -168,6 +168,7 @@ export default function Notices() {
     setError(null);
     try {
       const data = await sanityClient.fetch(NOTICES_QUERY);
+      console.log("[Notices] Sanity fetch data:", data);
       setNotices(data || FALLBACK_NOTICES);
       setUseFallback(false);
     } catch (err: any) {
