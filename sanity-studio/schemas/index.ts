@@ -11,6 +11,8 @@ import { companyInfo } from "./documents/companyInfo";
 import { siteHeader } from "./documents/siteHeader";
 import { siteFooter } from "./documents/siteFooter";
 import { notice } from "./documents/notice";
+import { contactPage } from "./documents/contactPage";
+import { noticesPage } from "./documents/noticesPage";
 
 /* ── Object types ── */
 import { procedureStep } from "./objects/procedureStep";
@@ -30,6 +32,8 @@ export const allSchemaTypes = [
   /* Documents (Studio 좌측 메뉴에 노출되는 것들) */
   service,
   homePage,
+  contactPage,
+  noticesPage,
   companyInfo,
   siteHeader,
   siteFooter,

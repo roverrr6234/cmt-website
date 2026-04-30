@@ -26,8 +26,13 @@ import {
   sanityImageUrl,
   sanityFileUrl,
   NOTICES_QUERY,
+  getNoticesPage,
   type SanityNotice,
 } from "@/lib/sanity";
+
+function pick<T>(v: T | null | undefined | "", fallback: T): T {
+  return v !== null && v !== undefined && v !== "" ? v : fallback;
+}
 
 const ITEMS_PER_PAGE = 10;
 
@@ -141,6 +146,22 @@ export default function Notices() {
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [labels, setLabels] = useState<any | null>(null);
+
+  /* Sanity 라벨 (없으면 하드코딩 fallback) */
+  const pageTitle = pick(labels?.pageTitle, "알림마당");
+  const pageDescription = pick(
+    labels?.pageDescription,
+    "법령 개정, 공지사항, 업계 동향 등 화학물질 관리에 필요한 최신 정보를 안내합니다.",
+  );
+  const categoryAllLabel = pick(labels?.categoryAllLabel, "전체");
+  const errorBaseText = pick(labels?.errorText, "데이터를 불러오는 중 오류가 발생했습니다.");
+  const cachedDataNote = pick(labels?.cachedDataNote, "캐시된 데이터를 표시합니다");
+  const retryButtonText = pick(labels?.retryButtonText, "재시도");
+  const attachmentsLabel = pick(labels?.attachmentsLabel, "첨부파일");
+  const fileDownloadDefaultText = pick(labels?.fileDownloadDefaultText, "파일 다운로드");
+  const paginationPrev = pick(labels?.paginationPrev, "이전");
+  const paginationNext = pick(labels?.paginationNext, "다음");
 
   const fetchNotices = useCallback(async () => {
     setLoading(true);
@@ -154,16 +175,17 @@ export default function Notices() {
       if (process.env.NODE_ENV !== 'production') {
         console.error("Sanity fetch error:", err);
       }
-      setError("데이터를 불러오는 중 오류가 발생했습니다.");
+      setError(errorBaseText);
       setNotices(FALLBACK_NOTICES);
       setUseFallback(true);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [errorBaseText]);
 
   useEffect(() => {
     fetchNotices();
+    getNoticesPage().then(setLabels).catch(() => { /* fallback 유지 */ });
   }, [fetchNotices]);
 
   const filteredNotices = useMemo(() => {
@@ -211,11 +233,10 @@ export default function Notices() {
       <section className="bg-[#0a1628] pt-28 pb-14 lg:pt-32 lg:pb-16">
         <div className="max-w-5xl mx-auto px-4 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-3">
-            알림마당
+            {pageTitle}
           </h1>
           <p className="text-gray-300 text-base md:text-lg max-w-2xl mx-auto">
-            법령 개정, 공지사항, 업계 동향 등 화학물질 관리에 필요한 최신 정보를
-            안내합니다.
+            {pageDescription}
           </p>
         </div>
       </section>
@@ -226,13 +247,13 @@ export default function Notices() {
         {error && (
           <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg text-sm">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{error} (캐시된 데이터를 표시합니다)</span>
+            <span>{error} ({cachedDataNote})</span>
             <button
               onClick={fetchNotices}
               className="ml-auto flex items-center gap-1 text-amber-700 hover:text-amber-900 font-medium"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              재시도
+              {retryButtonText}
             </button>
           </div>
         )}
@@ -253,7 +274,7 @@ export default function Notices() {
                   : "bg-white text-gray-600 border-gray-200 hover:bg-gray-100"
               }`}
             >
-              {cat}
+              {cat === "전체" ? categoryAllLabel : cat}
             </button>
           ))}
         </div>
@@ -323,7 +344,7 @@ export default function Notices() {
                     {notice.attachments && notice.attachments.length > 0 && (
                       <div className="mt-4 pt-4 border-t border-gray-200">
                         <p className="text-xs font-semibold text-gray-600 mb-2">
-                          첨부파일
+                          {attachmentsLabel}
                         </p>
                         <div className="space-y-2">
                           {notice.attachments.map((att) => (
@@ -334,7 +355,7 @@ export default function Notices() {
                               className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
                             >
                               <Download className="w-4 h-4" />
-                              {att.description || "파일 다운로드"}
+                              {att.description || fileDownloadDefaultText}
                             </a>
                           ))}
                         </div>

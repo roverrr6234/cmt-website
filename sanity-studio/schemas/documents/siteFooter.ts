@@ -4,6 +4,7 @@ import { defineType, defineField } from "sanity";
  * 사이트 푸터 (싱글톤)
  *
  * 기존 production 데이터셋의 siteFooter 필드를 그대로 반영.
+ * seoBottomText 는 라이브 사이트 푸터 가장 아래 SEO 용 노출 영역.
  */
 export const siteFooter = defineType({
   name: "siteFooter",
@@ -14,6 +15,7 @@ export const siteFooter = defineType({
     { name: "contact", title: "연락처" },
     { name: "links", title: "바로가기 링크" },
     { name: "labels", title: "섹션 제목/카피라이트" },
+    { name: "seo", title: "하단 SEO 문구" },
   ],
   fields: [
     /* ── 사업자 정보 ── */
@@ -46,6 +48,16 @@ export const siteFooter = defineType({
     defineField({ name: "servicesTitle", title: "'주요 업무' 섹션 제목", type: "string", group: "labels" }),
     defineField({ name: "quickLinksTitle", title: "'바로가기' 섹션 제목", type: "string", group: "labels" }),
     defineField({ name: "copyrightText", title: "카피라이트 문구", type: "string", group: "labels" }),
+
+    /* ── SEO 하단 문구 ── */
+    defineField({
+      name: "seoBottomText",
+      title: "푸터 맨 아래 SEO 안내 문구",
+      type: "text",
+      rows: 3,
+      description: "지역명 + 5대 서비스 등을 포함하는 SEO 용 텍스트. 예: 부산, 울산, 경남 포함 전국 어디서든 ...",
+      group: "seo",
+    }),
   ],
   preview: {
     prepare: () => ({ title: "🔻 사이트 푸터" }),

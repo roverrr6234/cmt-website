@@ -8,7 +8,7 @@ import { deskStructure } from "./deskStructure";
 /**
  * 화학물질관리기술(CMT) Sanity Studio
  *
- * - Project ID: xwuem73x
+ * - Project ID: 7l80ou25
  * - Dataset:    production
  * - 메뉴 구성:  ⭐ 서비스 관리(5대 서비스) / 🏠 홈페이지 / 🏢 회사정보 / 🔝 헤더 / 🔻 푸터 / 📢 알림마당
  *
@@ -19,7 +19,7 @@ export default defineConfig({
   name: "cmt-studio",
   title: "화학물질관리기술 (CMT) — 콘텐츠 관리",
 
-  projectId: "xwuem73x",
+  projectId: "7l80ou25",
   dataset: "production",
 
   plugins: [
