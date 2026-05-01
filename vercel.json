@@ -3,6 +3,7 @@
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install",
   "framework": "vite",
+  "outputDirectory": "dist/public",
   "headers": [
     {
       "source": "/(.*)",
