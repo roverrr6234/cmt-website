@@ -1,14 +1,29 @@
 import { createClient } from "@sanity/client";
 import imageUrlBuilder from "@sanity/image-url";
 
+const PROJECT_ID =
+  (import.meta.env.VITE_SANITY_PROJECT_ID as string | undefined) ||
+  "xwuem73x";
+const DATASET =
+  (import.meta.env.VITE_SANITY_DATASET as string | undefined) || "production";
+
 export const sanityClient = createClient({
-  projectId: "xwuem73x",
-  dataset: "production",
-  apiVersion: "2026-04-18",
-  useCdn: true,
+  projectId: PROJECT_ID,
+  dataset: DATASET,
+  apiVersion: "2024-01-01",
+  useCdn: false,
 });
 
+export const sanityConfig = {
+  projectId: PROJECT_ID,
+  dataset: DATASET,
+  apiVersion: "2024-01-01",
+  useCdn: false,
+};
+
 const builder = imageUrlBuilder(sanityClient);
+
+const DRAFT_FILTER = `!(_id in path("drafts.**"))`;
 
 /**
  * Sanity 이미지 URL 빌더
@@ -21,7 +36,9 @@ export function urlFor(source: any) {
 // ── 회사 정보 ──
 export async function getCompanyInfo() {
   try {
-    return await sanityClient.fetch(`*[_type == "companyInfo"][0]`);
+    return await sanityClient.fetch(
+      `*[_type == "companyInfo" && ${DRAFT_FILTER}][0]`,
+    );
   } catch (error) {
     console.error("Failed to fetch companyInfo:", error);
     return null;
@@ -31,7 +48,9 @@ export async function getCompanyInfo() {
 // ── 홈페이지 ──
 export async function getHomePage() {
   try {
-    return await sanityClient.fetch(`*[_type == "homePage"][0]`);
+    return await sanityClient.fetch(
+      `*[_type == "homePage" && ${DRAFT_FILTER}][0]`,
+    );
   } catch (error) {
     console.error("Failed to fetch homePage:", error);
     return null;
@@ -41,7 +60,9 @@ export async function getHomePage() {
 // ── 헤더 ──
 export async function getSiteHeader() {
   try {
-    return await sanityClient.fetch(`*[_type == "siteHeader"][0]`);
+    return await sanityClient.fetch(
+      `*[_type == "siteHeader" && ${DRAFT_FILTER}][0]`,
+    );
   } catch (error) {
     console.error("Failed to fetch siteHeader:", error);
     return null;
@@ -51,7 +72,9 @@ export async function getSiteHeader() {
 // ── 푸터 ──
 export async function getSiteFooter() {
   try {
-    return await sanityClient.fetch(`*[_type == "siteFooter"][0]`);
+    return await sanityClient.fetch(
+      `*[_type == "siteFooter" && ${DRAFT_FILTER}][0]`,
+    );
   } catch (error) {
     console.error("Failed to fetch siteFooter:", error);
     return null;
@@ -99,7 +122,7 @@ const SERVICE_FIELDS = `
 export async function getAllServices() {
   try {
     return await sanityClient.fetch(
-      `*[_type == "service"] | order(sortOrder asc) { ${SERVICE_FIELDS} }`,
+      `*[_type == "service" && ${DRAFT_FILTER}] | order(sortOrder asc) { ${SERVICE_FIELDS} }`,
     );
   } catch (error) {
     console.error("Failed to fetch services:", error);
@@ -111,7 +134,7 @@ export async function getAllServices() {
 export async function getServiceBySlug(slug: string) {
   try {
     return await sanityClient.fetch(
-      `*[_type == "service" && slug.current == $slug][0] { ${SERVICE_FIELDS} }`,
+      `*[_type == "service" && ${DRAFT_FILTER} && slug.current == $slug][0] { ${SERVICE_FIELDS} }`,
       { slug },
     );
   } catch (error) {
@@ -124,7 +147,7 @@ export async function getServiceBySlug(slug: string) {
 export async function getAllNotices() {
   try {
     return await sanityClient.fetch(
-      `*[_type == "notice"] | order(isPinned desc, publishedAt desc) {
+      `*[_type == "notice" && ${DRAFT_FILTER}] | order(isPinned desc, publishedAt desc) {
         _id,
         title,
         category,
@@ -133,7 +156,7 @@ export async function getAllNotices() {
         publishedAt,
         isPinned,
         attachments[]{ _key, _type, description, asset }
-      }`
+      }`,
     );
   } catch (error) {
     console.error("Failed to fetch notices:", error);
@@ -141,9 +164,8 @@ export async function getAllNotices() {
   }
 }
 
-// ── 특정 공지사항 ──
 // ── Notices.tsx 호환 exports ──
-export const NOTICES_QUERY = `*[_type == "notice"] | order(isPinned desc, publishedAt desc) {
+export const NOTICES_QUERY = `*[_type == "notice" && ${DRAFT_FILTER}] | order(isPinned desc, publishedAt desc) {
   _id,
   title,
   category,
@@ -169,20 +191,20 @@ export function sanityImageUrl(ref: string, width?: number) {
   if (!ref) return "";
   const [, id, dimensions, format] = ref.split("-");
   const w = width ? `?w=${width}` : "";
-  return `https://cdn.sanity.io/images/xwuem73x/production/${id}-${dimensions}.${format}${w}`;
+  return `https://cdn.sanity.io/images/${PROJECT_ID}/${DATASET}/${id}-${dimensions}.${format}${w}`;
 }
 
 export function sanityFileUrl(ref: string) {
   if (!ref) return "";
   const [, id, ext] = ref.split("-");
-  return `https://cdn.sanity.io/files/xwuem73x/production/${id}.${ext}`;
+  return `https://cdn.sanity.io/files/${PROJECT_ID}/${DATASET}/${id}.${ext}`;
 }
 
 // ── 특정 공지사항 ──
 export async function getNoticeById(id: string) {
   try {
     return await sanityClient.fetch(
-      `*[_type == "notice" && _id == $id][0] {
+      `*[_type == "notice" && ${DRAFT_FILTER} && _id == $id][0] {
         _id,
         title,
         category,
@@ -192,7 +214,7 @@ export async function getNoticeById(id: string) {
         isPinned,
         attachments[]{ _key, _type, description, asset }
       }`,
-      { id }
+      { id },
     );
   } catch (error) {
     console.error("Failed to fetch notice by id:", error);
