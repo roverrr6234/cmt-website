@@ -15,7 +15,7 @@ import {
 } from "@/lib/serviceData";
 import type { ServiceData } from "@/lib/serviceData";
 import { images } from "@/lib/images";
-import { getCompanyInfo, getAllServices } from "@/lib/sanity";
+import { getCompanyInfo, getAllServices, getSiteHeader, urlFor } from "@/lib/sanity";
 import { convertSanityServiceList } from "@/lib/sanityToService";
 
 const BLOG_URL = "https://blog.naver.com/ckt9054";
@@ -29,13 +29,18 @@ export default function Header() {
   /* Sanity-with-fallback: 비어있으면 라이브 코드값 그대로 */
   const [phone, setPhone] = useState<string>(fallbackCompanyInfo.phone);
   const [services, setServices] = useState<ServiceData[]>(fallbackServices);
+  const [logoUrl, setLogoUrl] = useState<string>("");
 
   useEffect(() => {
-    Promise.all([getCompanyInfo(), getAllServices()])
-      .then(([info, srv]) => {
+    Promise.all([getCompanyInfo(), getAllServices(), getSiteHeader()])
+      .then(([info, srv, header]) => {
         if (info?.phone) setPhone(info.phone);
         const converted = convertSanityServiceList(srv);
         if (converted.length > 0) setServices(converted);
+        if (header?.logo) {
+          const url = urlFor(header.logo);
+          if (url) setLogoUrl(url);
+        }
       })
       .catch(() => {
         // fallback 유지
@@ -64,11 +69,13 @@ export default function Header() {
         <div className="container flex items-center justify-between h-16 sm:h-[72px] lg:h-20">
           {/* Left: Logo */}
           <Link href="/" className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-            <img
-              src={images.logo}
-              alt="화학물질관리기술 로고"
-              className="h-11 sm:h-[52px] lg:h-[60px] w-auto object-contain"
-            />
+            {logoUrl && (
+              <img
+                src={logoUrl}
+                alt="화학물질관리기술 로고"
+                className="h-11 sm:h-[52px] lg:h-[60px] w-auto object-contain"
+              />
+            )}
           </Link>
 
           {/* Center: Phone Number */}
