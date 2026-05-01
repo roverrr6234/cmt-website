@@ -193,11 +193,11 @@ export const service = defineType({
     /* ── 4. 상세 정보 섹션 (표/체크리스트/알림 박스/다이어그램 등) ── */
     defineField({
       name: "sections",
-      title: "15. 상세 정보 섹션 (표 · 체크리스트 · 알림 · 비교표 · 다이어그램)",
+      title: "15. 상세 정보 섹션 (표 · 체크리스트 · 알림 · 비교표 · 다이어그램 · SVG)",
       type: "array",
       description:
         "상세 페이지 하단의 '상세 정보' 영역. 원하는 만큼 추가하고 순서를 자유롭게 조정하세요. " +
-        "텍스트(서식 가능)/알림 박스/표/체크리스트/비교표/절차 이미지 6가지 종류 중 선택할 수 있습니다.",
+        "텍스트(서식 가능)/알림 박스/표/체크리스트/비교표/절차 이미지/SVG 도표 7가지 종류 중 선택할 수 있습니다.",
       of: [
         { type: "sectionText" },
         { type: "sectionAlert" },
@@ -205,6 +205,7 @@ export const service = defineType({
         { type: "sectionChecklist" },
         { type: "sectionComparisonTable" },
         { type: "sectionProcedureImage" },
+        { type: "sectionRawSvg" },
       ],
     }),
 

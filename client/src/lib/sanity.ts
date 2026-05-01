@@ -112,7 +112,8 @@ const SERVICE_FIELDS = `
     rows[]{ _type, _key, cells, label, values },
     footnote,
     listTitle, items,
-    diagramId, image, alt, caption
+    diagramId, image, alt, caption,
+    svg
   },
   penalty,
   sortOrder

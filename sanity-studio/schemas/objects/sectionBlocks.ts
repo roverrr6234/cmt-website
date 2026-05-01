@@ -259,6 +259,47 @@ export const sectionComparisonTable = defineType({
   },
 });
 
+/* ── 7. 원본 SVG (코드 그대로 렌더) ── */
+export const sectionRawSvg = defineType({
+  name: "sectionRawSvg",
+  title: "SVG 도표 (코드 직접 입력)",
+  type: "object",
+  fields: [
+    defineField({
+      name: "title",
+      title: "섹션 제목",
+      type: "string",
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: "svg",
+      title: "SVG 코드",
+      type: "text",
+      rows: 12,
+      description:
+        "<svg ...>...</svg> 형태의 SVG 코드를 그대로 붙여넣으세요. 사이트에서 그대로 그려집니다. " +
+        "보안상 <script> 태그와 on* 이벤트 속성은 자동 제거됩니다.",
+      validation: (Rule) =>
+        Rule.required().custom((value) => {
+          if (typeof value !== "string") return true;
+          if (!/<svg[\s\S]*<\/svg>/i.test(value)) {
+            return "유효한 <svg>...</svg> 코드를 입력하세요.";
+          }
+          return true;
+        }),
+    }),
+    defineField({
+      name: "caption",
+      title: "캡션 (선택)",
+      type: "string",
+    }),
+  ],
+  preview: {
+    select: { title: "title" },
+    prepare: ({ title }) => ({ title: `🧭 ${title || "SVG 도표"}` }),
+  },
+});
+
 /* ── 6. 절차 이미지 (또는 코드 다이어그램 ID) ── */
 export const sectionProcedureImage = defineType({
   name: "sectionProcedureImage",

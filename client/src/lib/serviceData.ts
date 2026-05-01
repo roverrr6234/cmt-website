@@ -31,7 +31,7 @@ export interface ChecklistBlock {
 export interface ServiceSection {
   id: string;
   title: string;
-  type: "text" | "table" | "image" | "alert" | "checklist" | "procedure-image" | "comparison-table";
+  type: "text" | "table" | "image" | "alert" | "checklist" | "procedure-image" | "comparison-table" | "raw-svg";
   content?: string;
   table?: TableBlock;
   image?: ImageBlock;
@@ -43,6 +43,7 @@ export interface ServiceSection {
     rows: { label: string; values: string[] }[];
     footnote?: string;
   };
+  rawSvg?: { svg: string; caption?: string };
 }
 
 export interface ServiceData {

@@ -336,6 +336,32 @@ function ProcedureImage({ section }: { section: ServiceSection }) {
   );
 }
 
+function RawSvgBlock({ section }: { section: ServiceSection }) {
+  if (!section.rawSvg?.svg) return null;
+  // 관리자 입력이지만 최소 sanitize: <script> 블록과 on* 이벤트 속성 제거.
+  const sanitized = section.rawSvg.svg
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, "")
+    .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, "")
+    .replace(/\son[a-z]+\s*=\s*[^\s>]+/gi, "");
+  return (
+    <div>
+      <SectionHeading title={section.title} icon={<ImageIcon className="w-5 h-5 text-gold" />} />
+      <figure className="bg-white border border-border rounded-sm overflow-hidden">
+        <div
+          className="p-4 lg:p-6 bg-warm-gray flex items-center justify-center [&_svg]:max-w-full [&_svg]:h-auto"
+          dangerouslySetInnerHTML={{ __html: sanitized }}
+        />
+        {section.rawSvg.caption && (
+          <figcaption className="px-4 py-3 text-xs text-foreground/50 border-t border-border bg-white leading-relaxed">
+            {section.rawSvg.caption}
+          </figcaption>
+        )}
+      </figure>
+    </div>
+  );
+}
+
 function TextBlock({ section }: { section: ServiceSection }) {
   if (!section.content) return null;
   return (
@@ -380,6 +406,8 @@ function RenderSection({ section }: { section: ServiceSection }) {
       return <ChecklistBox section={section} />;
     case "procedure-image":
       return <ProcedureImage section={section} />;
+    case "raw-svg":
+      return <RawSvgBlock section={section} />;
     case "text":
       return <TextBlock section={section} />;
     default:

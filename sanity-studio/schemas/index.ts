@@ -21,6 +21,7 @@ import {
   sectionChecklist,
   sectionComparisonTable,
   sectionProcedureImage,
+  sectionRawSvg,
 } from "./objects/sectionBlocks";
 import { statItem } from "./objects/statItem";
 import { whyItem } from "./objects/whyItem";
@@ -43,6 +44,7 @@ export const allSchemaTypes = [
   sectionChecklist,
   sectionComparisonTable,
   sectionProcedureImage,
+  sectionRawSvg,
   statItem,
   whyItem,
   quickLink,

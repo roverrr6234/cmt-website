@@ -112,6 +112,17 @@ function convertSection(block: any): ServiceSection | null {
         },
       };
 
+    case "sectionRawSvg":
+      return {
+        id: baseId,
+        title: block.title || "",
+        type: "raw-svg",
+        rawSvg: {
+          svg: typeof block.svg === "string" ? block.svg : "",
+          caption: block.caption || undefined,
+        },
+      };
+
     case "sectionProcedureImage": {
       // 코드 다이어그램이 있는 경우 id 를 diagramId 로 맞춰서
       // ServiceDetail.tsx 의 diagramComponents[section.id] lookup 이 작동하도록.
