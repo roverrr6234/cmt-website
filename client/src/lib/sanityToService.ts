@@ -17,7 +17,7 @@ import {
   Zap,
   MapPin,
 } from "lucide-react";
-import type { ServiceData, ServiceSection } from "./serviceData";
+import type { ServiceData, ServiceSection } from "./types";
 import { urlFor } from "./sanity";
 
 /* ── 아이콘 이름 → Lucide 컴포넌트 ── */

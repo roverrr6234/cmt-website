@@ -9,11 +9,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Phone, Mail } from "lucide-react";
-import {
-  companyInfo as fallbackCompanyInfo,
-  services as fallbackServices,
-} from "@/lib/serviceData";
-import type { ServiceData } from "@/lib/serviceData";
+import type { ServiceData } from "@/lib/types";
 import { getSiteFooter, getCompanyInfo, getAllServices } from "@/lib/sanity";
 import { convertSanityServiceList } from "@/lib/sanityToService";
 
@@ -25,9 +21,9 @@ function pick<T>(v: T | null | undefined | "", fallback: T): T {
 
 export default function Footer() {
   const [footer, setFooter] = useState<any | null>(null);
-  const [phone, setPhone] = useState<string>(fallbackCompanyInfo.phone);
-  const [email, setEmail] = useState<string>(fallbackCompanyInfo.email);
-  const [services, setServices] = useState<ServiceData[]>(fallbackServices);
+  const [phone, setPhone] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [services, setServices] = useState<ServiceData[]>([]);
 
   useEffect(() => {
     Promise.all([getSiteFooter(), getCompanyInfo(), getAllServices()])
@@ -35,11 +31,10 @@ export default function Footer() {
         setFooter(f);
         if (info?.phone) setPhone(info.phone);
         if (info?.email) setEmail(info.email);
-        const converted = convertSanityServiceList(srv);
-        if (converted.length > 0) setServices(converted);
+        setServices(convertSanityServiceList(srv));
       })
       .catch(() => {
-        // fallback 유지
+        /* 빈 상태 유지 */
       });
   }, []);
 

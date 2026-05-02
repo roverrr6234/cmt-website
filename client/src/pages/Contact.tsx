@@ -1,15 +1,32 @@
 /*
  * Design: "Authoritative Counsel" — Dedicated contact page
  */
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { ChevronRight, Phone, Mail, MapPin, Clock } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import StickyPhone from "@/components/StickyPhone";
-import { companyInfo } from "@/lib/serviceData";
+import { getCompanyInfo } from "@/lib/sanity";
 
 export default function Contact() {
+  const [phone, setPhone] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [address, setAddress] = useState<string>("");
+
+  useEffect(() => {
+    getCompanyInfo()
+      .then((info) => {
+        if (info?.phone) setPhone(info.phone);
+        if (info?.email) setEmail(info.email);
+        if (info?.address) setAddress(info.address);
+      })
+      .catch(() => {
+        /* 빈 상태 유지 */
+      });
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -45,39 +62,43 @@ export default function Contact() {
               <div className="gold-line mb-8" />
 
               <div className="space-y-6">
-                <a
-                  href={`tel:${companyInfo.phone}`}
-                  className="flex items-start gap-4 p-5 bg-warm-gray rounded-sm hover:bg-navy hover:text-white transition-all group"
-                >
-                  <div className="w-12 h-12 bg-navy rounded-sm flex items-center justify-center shrink-0 group-hover:bg-gold transition-colors">
-                    <Phone className="w-5 h-5 text-gold group-hover:text-navy" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground group-hover:text-white/70 mb-1">
-                      전화 상담
-                    </p>
-                    <p className="font-bold text-navy group-hover:text-white text-lg">
-                      {companyInfo.phone}
-                    </p>
-                  </div>
-                </a>
+                {phone && (
+                  <a
+                    href={`tel:${phone}`}
+                    className="flex items-start gap-4 p-5 bg-warm-gray rounded-sm hover:bg-navy hover:text-white transition-all group"
+                  >
+                    <div className="w-12 h-12 bg-navy rounded-sm flex items-center justify-center shrink-0 group-hover:bg-gold transition-colors">
+                      <Phone className="w-5 h-5 text-gold group-hover:text-navy" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground group-hover:text-white/70 mb-1">
+                        전화 상담
+                      </p>
+                      <p className="font-bold text-navy group-hover:text-white text-lg">
+                        {phone}
+                      </p>
+                    </div>
+                  </a>
+                )}
 
-                <a
-                  href={`mailto:${companyInfo.email}`}
-                  className="flex items-start gap-4 p-5 bg-warm-gray rounded-sm hover:bg-navy hover:text-white transition-all group"
-                >
-                  <div className="w-12 h-12 bg-navy rounded-sm flex items-center justify-center shrink-0 group-hover:bg-gold transition-colors">
-                    <Mail className="w-5 h-5 text-gold group-hover:text-navy" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground group-hover:text-white/70 mb-1">
-                      이메일
-                    </p>
-                    <p className="font-bold text-navy group-hover:text-white">
-                      {companyInfo.email}
-                    </p>
-                  </div>
-                </a>
+                {email && (
+                  <a
+                    href={`mailto:${email}`}
+                    className="flex items-start gap-4 p-5 bg-warm-gray rounded-sm hover:bg-navy hover:text-white transition-all group"
+                  >
+                    <div className="w-12 h-12 bg-navy rounded-sm flex items-center justify-center shrink-0 group-hover:bg-gold transition-colors">
+                      <Mail className="w-5 h-5 text-gold group-hover:text-navy" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground group-hover:text-white/70 mb-1">
+                        이메일
+                      </p>
+                      <p className="font-bold text-navy group-hover:text-white">
+                        {email}
+                      </p>
+                    </div>
+                  </a>
+                )}
 
                 <div className="flex items-start gap-4 p-5 bg-warm-gray rounded-sm">
                   <div className="w-12 h-12 bg-navy rounded-sm flex items-center justify-center shrink-0">
@@ -85,7 +106,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">주소</p>
-                    <p className="font-bold text-navy">{companyInfo.address}</p>
+                    <p className="font-bold text-navy">{address}</p>
                     <p className="text-sm text-muted-foreground mt-1">
                       부산, 울산, 경남 포함 전국 출장 서비스
                     </p>
@@ -114,7 +135,7 @@ export default function Contact() {
               </h2>
               <div className="gold-line mb-8" />
               <p className="text-foreground/70 text-sm mb-8 leading-relaxed">
-                아래 양식을 작성하시면 이메일({companyInfo.email})로 문의 내용이 전달됩니다.
+                아래 양식을 작성하시면{email && ` 이메일(${email})로`} 문의 내용이 전달됩니다.
                 빠른 시일 내에 전문 컨설턴트가 연락드리겠습니다.
               </p>
               <ContactForm />

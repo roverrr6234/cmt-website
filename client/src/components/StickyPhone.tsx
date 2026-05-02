@@ -6,11 +6,10 @@
  */
 import { useEffect, useState } from "react";
 import { Phone } from "lucide-react";
-import { companyInfo as fallbackCompanyInfo } from "@/lib/serviceData";
 import { getCompanyInfo } from "@/lib/sanity";
 
 export default function StickyPhone() {
-  const [phone, setPhone] = useState<string>(fallbackCompanyInfo.phone);
+  const [phone, setPhone] = useState<string>("");
 
   useEffect(() => {
     getCompanyInfo()
@@ -18,9 +17,11 @@ export default function StickyPhone() {
         if (info?.phone) setPhone(info.phone);
       })
       .catch(() => {
-        // 실패해도 fallback 그대로
+        /* 빈 상태 유지 */
       });
   }, []);
+
+  if (!phone) return null;
 
   return (
     <a

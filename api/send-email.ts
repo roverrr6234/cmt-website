@@ -20,6 +20,7 @@ const requiredEnvVars = [
   "SMTP_USER",
   "SMTP_PASS",
   "SMTP_FROM_EMAIL",
+  "SMTP_RECIPIENT_EMAIL",
   "UPSTASH_REDIS_REST_URL",
   "UPSTASH_REDIS_REST_TOKEN",
 ];
@@ -95,6 +96,10 @@ const validateInput = (data: EmailRequest): { valid: boolean; error?: string } =
     return { valid: false, error: "회사명은 100자 이내여야 합니다." };
   }
 
+  if (data.service_type && data.service_type.length > 50) {
+    return { valid: false, error: "서비스 항목이 올바르지 않습니다." };
+  }
+
   // 이메일 형식 검증
   if (data.from_email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -144,6 +149,17 @@ export default async (req: VercelRequest, res: VercelResponse) => {
   }
 
   try {
+    // 수신자 환경변수 검증 — 누락 시 개인 메일로 흘러가는 것을 방지
+    const recipientEmail = process.env.SMTP_RECIPIENT_EMAIL;
+    if (!recipientEmail) {
+      console.error("SMTP_RECIPIENT_EMAIL not configured");
+      res.status(500).json({
+        error: "Configuration error",
+        message: "메일 서버 설정 오류입니다. 관리자에게 문의해 주세요.",
+      });
+      return;
+    }
+
     // Rate Limiting 검사
     const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown";
     const { success, limit, reset, remaining } = await ratelimit.limit(String(ip));
@@ -220,7 +236,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     // 이메일 발송
     const mailOptions = {
       from: process.env.SMTP_FROM_EMAIL,
-      to: process.env.SMTP_RECIPIENT_EMAIL || "ckt9054@naver.com",
+      to: recipientEmail,
       replyTo: sanitized.from_email || undefined,
       subject: `[상담 신청] ${sanitized.name} - ${sanitized.service_type || "일반"}`,
       html: emailHtml,

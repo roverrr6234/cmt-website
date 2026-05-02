@@ -21,7 +21,28 @@
       "Bash(npx -y pnpm install --silent)",
       "Bash(node_modules/.bin/vite build *)",
       "Bash(curl -sS https://cmtbusan.kr/ -o /tmp/live.html)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(git commit *)",
+      "Bash(git add *)",
+      "Bash(git push *)",
+      "Bash(npm run *)",
+      "Bash(git revert *)",
+      "Bash(git show *)",
+      "Bash(yes)",
+      "Bash(xargs grep *)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/post-task.sh"
+          }
+        ]
+      }
     ]
   }
 }

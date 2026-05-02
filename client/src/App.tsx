@@ -9,6 +9,7 @@ import ServiceDetail from "./pages/ServiceDetail";
 import Contact from "./pages/Contact";
 import Notices from "./pages/Notices";
 import RSSFeed from "./pages/RSSFeed";
+import TestSanity from "./pages/TestSanity";
 
 function Router() {
   return (
@@ -19,6 +20,10 @@ function Router() {
       <Route path="/notices" component={Notices} />
       <Route path="/rss" component={RSSFeed} />
       <Route path="/rss.xml" component={RSSFeed} />
+      {/* 개발 환경 전용 진단 페이지 — 운영 빌드에서는 라우트 비활성 */}
+      {import.meta.env.DEV && (
+        <Route path="/test-sanity" component={TestSanity} />
+      )}
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

@@ -22,10 +22,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import StickyPhone from "@/components/StickyPhone";
-import { companyInfo, services } from "@/lib/serviceData";
-import type { ServiceData } from "@/lib/serviceData";
+import type { ServiceData } from "@/lib/types";
 import { images } from "@/lib/images";
-import { getHomePage, getAllServices } from "@/lib/sanity";
+import { getHomePage, getAllServices, getCompanyInfo } from "@/lib/sanity";
 import { convertSanityServiceList } from "@/lib/sanityToService";
 
 /** Sanity 값이 비어있지 않으면 그대로, 아니면 fallback. */
@@ -136,28 +135,26 @@ const whyChooseData = [
 
 export default function Home() {
   /**
-   * Sanity 데이터 fetch — 도착 전엔 모든 fallback 으로 렌더되어 화면이 바뀌지 않는다.
-   * 도착 후엔 Sanity 값으로 교체. sync-home-page 로 라이브와 동기화 했으므로
-   * 텍스트가 동일 → 시각 차이 없음. 아버님이 Sanity 에서 수정한 순간만 반영.
+   * Sanity 단일 진실 공급원 — homePage / service / companyInfo 도큐먼트에서 모든 콘텐츠를 가져온다.
+   * 응답 도착 전에는 텍스트 fallback(아래 디폴트 문자열)으로 잠깐 렌더, 도착 즉시 교체.
    */
   const [home, setHome] = useState<any | null>(null);
-  const [sanityServices, setSanityServices] = useState<ServiceData[]>([]);
+  const [services, setServices] = useState<ServiceData[]>([]);
+  const [phone, setPhone] = useState<string>("");
 
   useEffect(() => {
-    Promise.all([getHomePage(), getAllServices()])
-      .then(([h, s]) => {
+    Promise.all([getHomePage(), getAllServices(), getCompanyInfo()])
+      .then(([h, s, info]) => {
         setHome(h);
-        const converted = convertSanityServiceList(s);
-        if (converted.length > 0) setSanityServices(converted);
+        setServices(convertSanityServiceList(s));
+        if (info?.phone) setPhone(info.phone);
       })
       .catch(() => {
-        // 네트워크 오류 등 — fallback 으로 그대로 노출
+        /* 빈 상태 그대로 — 화면 일부는 디폴트 텍스트로 렌더 */
       });
   }, []);
 
-  /* fallback 통합 */
-  const displayServices: ServiceData[] =
-    sanityServices.length > 0 ? sanityServices : services;
+  const displayServices: ServiceData[] = services;
 
   const whyItems =
     Array.isArray(home?.whyChooseItems) && home.whyChooseItems.length > 0
@@ -227,15 +224,17 @@ export default function Home() {
                 <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 ml-3" />
               </Button>
             </Link>
-            <a href={`tel:${companyInfo.phone}`}>
-              <Button
-                variant="outline"
-                className="border-2 border-white/40 text-white hover:bg-white/10 px-10 sm:px-12 py-4 sm:py-5 rounded-sm text-base sm:text-lg lg:text-xl bg-transparent font-bold shadow-lg"
-              >
-                <Phone className="w-5 h-5 sm:w-6 sm:h-6 mr-3" />
-                {companyInfo.phone}
-              </Button>
-            </a>
+            {phone && (
+              <a href={`tel:${phone}`}>
+                <Button
+                  variant="outline"
+                  className="border-2 border-white/40 text-white hover:bg-white/10 px-10 sm:px-12 py-4 sm:py-5 rounded-sm text-base sm:text-lg lg:text-xl bg-transparent font-bold shadow-lg"
+                >
+                  <Phone className="w-5 h-5 sm:w-6 sm:h-6 mr-3" />
+                  {phone}
+                </Button>
+              </a>
+            )}
           </div>
         </div>
       </section>
@@ -423,15 +422,17 @@ export default function Home() {
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
-              <a href={`tel:${companyInfo.phone}`}>
-                <Button
-                  variant="outline"
-                  className="border-2 border-white/40 text-white hover:bg-white/10 px-10 py-4 rounded-sm text-base sm:text-lg bg-transparent"
-                >
-                  <Phone className="w-5 h-5 mr-2" />
-                  {companyInfo.phone}
-                </Button>
-              </a>
+              {phone && (
+                <a href={`tel:${phone}`}>
+                  <Button
+                    variant="outline"
+                    className="border-2 border-white/40 text-white hover:bg-white/10 px-10 py-4 rounded-sm text-base sm:text-lg bg-transparent"
+                  >
+                    <Phone className="w-5 h-5 mr-2" />
+                    {phone}
+                  </Button>
+                </a>
+              )}
             </div>
           </FadeInSection>
         </div>
@@ -456,24 +457,26 @@ export default function Home() {
                     "화학안전 인허가에 관한 궁금한 점이 있으시면 언제든지 문의해 주세요. 전문 컨설턴트가 빠르게 답변 드리겠습니다.",
                   )}
                 </p>
-                <div className="space-y-4">
-                  <a
-                    href={`tel:${companyInfo.phone}`}
-                    className="flex items-center gap-4 p-4 bg-warm-gray rounded-sm hover:bg-navy hover:text-white transition-all group"
-                  >
-                    <div className="w-12 h-12 bg-navy rounded-sm flex items-center justify-center group-hover:bg-gold transition-colors">
-                      <Phone className="w-5 h-5 text-gold group-hover:text-navy" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground group-hover:text-white/70">
-                        전화 상담
-                      </p>
-                      <p className="font-bold text-navy group-hover:text-white">
-                        {companyInfo.phone}
-                      </p>
-                    </div>
-                  </a>
-                </div>
+                {phone && (
+                  <div className="space-y-4">
+                    <a
+                      href={`tel:${phone}`}
+                      className="flex items-center gap-4 p-4 bg-warm-gray rounded-sm hover:bg-navy hover:text-white transition-all group"
+                    >
+                      <div className="w-12 h-12 bg-navy rounded-sm flex items-center justify-center group-hover:bg-gold transition-colors">
+                        <Phone className="w-5 h-5 text-gold group-hover:text-navy" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground group-hover:text-white/70">
+                          전화 상담
+                        </p>
+                        <p className="font-bold text-navy group-hover:text-white">
+                          {phone}
+                        </p>
+                      </div>
+                    </a>
+                  </div>
+                )}
               </FadeInSection>
             </div>
             <div className="lg:col-span-3">

@@ -5,11 +5,7 @@
  */
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  companyInfo as fallbackCompanyInfo,
-  services as fallbackServices,
-} from "@/lib/serviceData";
-import type { ServiceData } from "@/lib/serviceData";
+import type { ServiceData } from "@/lib/types";
 import { Send, Phone, Mail, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import DOMPurify from "dompurify";
@@ -85,8 +81,8 @@ export default function ContactForm({
   const rateLimitTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   /* Sanity-with-fallback */
-  const [companyPhone, setCompanyPhone] = useState<string>(fallbackCompanyInfo.phone);
-  const [services, setServices] = useState<ServiceData[]>(fallbackServices);
+  const [companyPhone, setCompanyPhone] = useState<string>("");
+  const [services, setServices] = useState<ServiceData[]>([]);
 
   useEffect(() => {
     Promise.all([getCompanyInfo(), getAllServices()])

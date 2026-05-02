@@ -26,15 +26,26 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import StickyPhone from "@/components/StickyPhone";
-import { services, companyInfo } from "@/lib/serviceData";
-import type { ServiceSection, ServiceData } from "@/lib/serviceData";
+import type { ServiceSection, ServiceData } from "@/lib/types";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { diagramComponents } from "@/components/diagrams";
-import { getServiceBySlug } from "@/lib/sanity";
-import { convertSanityService } from "@/lib/sanityToService";
+import { getServiceBySlug, getAllServices, getCompanyInfo } from "@/lib/sanity";
+import {
+  convertSanityService,
+  convertSanityServiceList,
+} from "@/lib/sanityToService";
+import DOMPurify from "dompurify";
 
 /* ── Breadcrumb with hover dropdown ── */
-function BreadcrumbNav({ currentSlug, currentTitle }: { currentSlug: string; currentTitle: string }) {
+function BreadcrumbNav({
+  currentSlug,
+  currentTitle,
+  services,
+}: {
+  currentSlug: string;
+  currentTitle: string;
+  services: ServiceData[];
+}) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -338,12 +349,10 @@ function ProcedureImage({ section }: { section: ServiceSection }) {
 
 function RawSvgBlock({ section }: { section: ServiceSection }) {
   if (!section.rawSvg?.svg) return null;
-  // 관리자 입력이지만 최소 sanitize: <script> 블록과 on* 이벤트 속성 제거.
-  const sanitized = section.rawSvg.svg
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, "")
-    .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, "")
-    .replace(/\son[a-z]+\s*=\s*[^\s>]+/gi, "");
+  // DOMPurify 의 SVG 프로파일로 sanitize — script/foreignObject/javascript: URL/이벤트 핸들러 등 차단
+  const sanitized = DOMPurify.sanitize(section.rawSvg.svg, {
+    USE_PROFILES: { svg: true, svgFilters: true },
+  });
   return (
     <div>
       <SectionHeading title={section.title} icon={<ImageIcon className="w-5 h-5 text-gold" />} />
@@ -422,16 +431,15 @@ export default function ServiceDetail() {
   const { slug } = useParams<{ slug: string }>();
 
   /**
-   * 데이터 조회 전략 (디자인 불변, fallback-first):
-   * 1. 즉시: 코드 안의 5대 서비스(serviceData.ts) 에서 동기적으로 찾는다 — 첫 렌더부터 깜빡임 없음.
-   * 2. 비동기: Sanity 에서 같은 slug 로 다시 조회. 있으면 그 데이터로 교체 (아버님 수정 반영).
-   * 3. 둘 다 없으면 404.
-   * 4. 새로 추가된 Sanity-only 서비스도 잠깐의 로딩 후 동일 디자인으로 렌더.
+   * 데이터 조회 — Sanity 단일 진실 공급원.
+   * 첫 렌더에서는 service === undefined 로 빈 헤더만 보이고,
+   * Sanity 응답 도착 후 정상 렌더 또는 404. 응답이 빠르므로 깜빡임은 거의 없다.
    */
-  const fallback = services.find((s) => s.slug === slug);
   const [service, setService] = useState<ServiceData | null | undefined>(
-    fallback ?? undefined,
+    undefined,
   );
+  const [allServices, setAllServices] = useState<ServiceData[]>([]);
+  const [phone, setPhone] = useState<string>("");
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -442,28 +450,24 @@ export default function ServiceDetail() {
     }
 
     let cancelled = false;
-    setService(fallback ?? undefined);
+    setService(undefined);
 
-    getServiceBySlug(slug)
-      .then((sanityDoc) => {
+    Promise.all([getServiceBySlug(slug), getAllServices(), getCompanyInfo()])
+      .then(([sanityDoc, all, info]) => {
         if (cancelled) return;
         const converted = convertSanityService(sanityDoc);
-        if (converted) {
-          setService(converted);
-        } else if (!fallback) {
-          setService(null);
-        }
+        setService(converted ?? null);
+        setAllServices(convertSanityServiceList(all));
+        if (info?.phone) setPhone(info.phone);
       })
       .catch(() => {
         if (cancelled) return;
-        if (!fallback) setService(null);
+        setService(null);
       });
 
     return () => {
       cancelled = true;
     };
-    // fallback 은 slug 에서 파생되므로 slug 만 deps 로
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   // 로딩 중 (Sanity 응답 대기, fallback 도 없음): 빈 화면 + 헤더만
@@ -497,10 +501,12 @@ export default function ServiceDetail() {
   }
 
   const Icon = service.icon;
-  const currentIndex = services.findIndex((s) => s.slug === slug);
-  const prevService = currentIndex > 0 ? services[currentIndex - 1] : null;
+  const currentIndex = allServices.findIndex((s) => s.slug === slug);
+  const prevService = currentIndex > 0 ? allServices[currentIndex - 1] : null;
   const nextService =
-    currentIndex < services.length - 1 ? services[currentIndex + 1] : null;
+    currentIndex >= 0 && currentIndex < allServices.length - 1
+      ? allServices[currentIndex + 1]
+      : null;
 
   // Calculate mid-point for CTA insertion
   const midIdx = Math.floor(service.sections.length / 2);
@@ -512,7 +518,11 @@ export default function ServiceDetail() {
       {/* ── Breadcrumb + Hero ── */}
       <section className="bg-navy py-16 lg:py-24">
         <div className="container">
-          <BreadcrumbNav currentSlug={slug || ''} currentTitle={service.shortTitle} />
+          <BreadcrumbNav
+            currentSlug={slug || ""}
+            currentTitle={service.shortTitle}
+            services={allServices}
+          />
           <div className="flex items-start gap-6">
             <div className="w-16 h-16 bg-gold/20 rounded-sm items-center justify-center shrink-0 hidden sm:flex">
               <Icon className="w-8 h-8 text-gold" />
@@ -794,13 +804,15 @@ export default function ServiceDetail() {
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>
-                  <a
-                    href={`tel:${companyInfo.phone}`}
-                    className="inline-flex items-center gap-2 text-white/80 hover:text-gold transition-colors text-sm"
-                  >
-                    <Phone className="w-4 h-4" />
-                    {companyInfo.phone}
-                  </a>
+                  {phone && (
+                    <a
+                      href={`tel:${phone}`}
+                      className="inline-flex items-center gap-2 text-white/80 hover:text-gold transition-colors text-sm"
+                    >
+                      <Phone className="w-4 h-4" />
+                      {phone}
+                    </a>
+                  )}
                 </div>
               </div>
             </FadeIn>
@@ -838,41 +850,45 @@ export default function ServiceDetail() {
               <ContactForm variant="compact" />
 
               {/* Other Services */}
-              <div className="bg-white border border-border rounded-sm p-6">
-                <h3 className="text-navy font-bold text-sm mb-4 font-serif">
-                  다른 서비스
-                </h3>
-                <ul className="space-y-2">
-                  {services
-                    .filter((s) => s.id !== service.id)
-                    .map((s) => {
-                      const SIcon = s.icon;
-                      return (
-                        <li key={s.id}>
-                          <Link
-                            href={`/service/${s.slug}`}
-                            className="flex items-center gap-3 p-3 rounded-sm hover:bg-warm-gray transition-colors group"
-                          >
-                            <SIcon className="w-4 h-4 text-steel group-hover:text-gold transition-colors" />
-                            <span className="text-sm text-foreground/80 group-hover:text-navy transition-colors">
-                              {s.shortTitle}
-                            </span>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                </ul>
-              </div>
+              {allServices.length > 1 && (
+                <div className="bg-white border border-border rounded-sm p-6">
+                  <h3 className="text-navy font-bold text-sm mb-4 font-serif">
+                    다른 서비스
+                  </h3>
+                  <ul className="space-y-2">
+                    {allServices
+                      .filter((s) => s.id !== service.id)
+                      .map((s) => {
+                        const SIcon = s.icon;
+                        return (
+                          <li key={s.id}>
+                            <Link
+                              href={`/service/${s.slug}`}
+                              className="flex items-center gap-3 p-3 rounded-sm hover:bg-warm-gray transition-colors group"
+                            >
+                              <SIcon className="w-4 h-4 text-steel group-hover:text-gold transition-colors" />
+                              <span className="text-sm text-foreground/80 group-hover:text-navy transition-colors">
+                                {s.shortTitle}
+                              </span>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                </div>
+              )}
 
               {/* Quick Contact */}
-              <a
-                href={`tel:${companyInfo.phone}`}
-                className="block bg-navy text-white p-6 rounded-sm hover:bg-navy-light transition-colors"
-              >
-                <Phone className="w-6 h-6 text-gold mb-3" />
-                <p className="text-sm text-white/70 mb-1">전화 상담</p>
-                <p className="font-bold text-lg">{companyInfo.phone}</p>
-              </a>
+              {phone && (
+                <a
+                  href={`tel:${phone}`}
+                  className="block bg-navy text-white p-6 rounded-sm hover:bg-navy-light transition-colors"
+                >
+                  <Phone className="w-6 h-6 text-gold mb-3" />
+                  <p className="text-sm text-white/70 mb-1">전화 상담</p>
+                  <p className="font-bold text-lg">{phone}</p>
+                </a>
+              )}
             </div>
           </div>
         </div>
