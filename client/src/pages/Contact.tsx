@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import StickyPhone from "@/components/StickyPhone";
+import { Helmet } from "react-helmet-async";
 import { getCompanyInfo } from "@/lib/sanity";
 
 export default function Contact() {
@@ -23,12 +24,31 @@ export default function Contact() {
         if (info?.address) setAddress(info.address);
       })
       .catch(() => {
-        /* 빈 상태 유지 */
+        setPhone("051-412-7707");
+        setEmail("ckt9054@naver.com");
+        setAddress("부산광역시 영도구 꿈나무길 261 (2층)");
       });
   }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>무료 상담 신청 | 화학물질관리기술(CMT)</title>
+        <meta name="description" content="화학안전 인허가 전문 컨설턴트에게 무료 상담을 신청하세요. 화학사고예방관리계획서, 설치검사, 영업허가, PSM 등 빠른 답변을 드립니다." />
+        <link rel="canonical" href="https://www.cmtbusan.kr/contact" />
+        <meta property="og:url" content="https://www.cmtbusan.kr/contact" />
+        <meta property="og:title" content="무료 상담 신청 | 화학물질관리기술(CMT)" />
+        <meta property="og:description" content="화학안전 인허가 전문 컨설턴트에게 무료 상담을 신청하세요." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ContactPage",
+          "url": "https://www.cmtbusan.kr/contact",
+          "name": "화학물질관리기술(CMT) 상담 신청",
+          "mainEntity": {
+            "@id": "https://www.cmtbusan.kr/#localbusiness"
+          }
+        })}</script>
+      </Helmet>
       <Header />
 
       {/* Hero */}

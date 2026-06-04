@@ -7,6 +7,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Helmet } from "react-helmet-async";
 import { PortableText } from "@portabletext/react";
 import DOMPurify from "dompurify";
 import {
@@ -205,6 +206,14 @@ export default function Notices() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Helmet>
+        <title>알림마당 | 화학물질관리기술(CMT)</title>
+        <meta name="description" content="법령 개정, 공지사항, 업계 동향 등 화학물질 관리에 필요한 최신 정보를 안내합니다." />
+        <link rel="canonical" href="https://www.cmtbusan.kr/notices" />
+        <meta property="og:url" content="https://www.cmtbusan.kr/notices" />
+        <meta property="og:title" content="알림마당 | 화학물질관리기술(CMT)" />
+        <meta property="og:description" content="법령 개정, 공지사항, 업계 동향 등 화학물질 관리에 필요한 최신 정보를 안내합니다." />
+      </Helmet>
       <Header />
 
       {/* Hero Banner */}

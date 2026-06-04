@@ -26,6 +26,7 @@ import type { ServiceData } from "@/lib/types";
 import { images } from "@/lib/images";
 import { getHomePage, getAllServices, getCompanyInfo } from "@/lib/sanity";
 import { convertSanityServiceList } from "@/lib/sanityToService";
+import { Helmet } from "react-helmet-async";
 
 /** Sanity 값이 비어있지 않으면 그대로, 아니면 fallback. */
 function pick<T>(v: T | null | undefined | "", fallback: T): T {
@@ -189,6 +190,14 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>화학물질관리기술(CMT) | 부산 유해화학물질 취급시설 전문 컨설팅</title>
+        <meta name="description" content="전국 화학사고예방관리계획서, 유해화학물질 취급시설 설치검사, 유해화학물질 영업허가, PSM(공정안전보고서), 유해위험방지계획서 전문 컨설팅 기업" />
+        <link rel="canonical" href="https://www.cmtbusan.kr" />
+        <meta property="og:url" content="https://www.cmtbusan.kr" />
+        <meta property="og:title" content="화학물질관리기술(CMT) | 부산 유해화학물질 취급시설 전문 컨설팅" />
+        <meta property="og:description" content="전국 화학사고예방관리계획서, 유해화학물질 취급시설 설치검사, 유해화학물질 영업허가, PSM(공정안전보고서), 유해위험방지계획서 전문 컨설팅 기업" />
+      </Helmet>
       <Header />
 
       {/* Hero Section — enlarged slogan + bigger CTA */}

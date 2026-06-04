@@ -35,6 +35,7 @@ import {
   convertSanityServiceList,
 } from "@/lib/sanityToService";
 import DOMPurify from "dompurify";
+import { Helmet } from "react-helmet-async";
 
 /* ── Breadcrumb with hover dropdown ── */
 function BreadcrumbNav({
@@ -511,8 +512,37 @@ export default function ServiceDetail() {
   // Calculate mid-point for CTA insertion
   const midIdx = Math.floor(service.sections.length / 2);
 
+  const pageUrl = `https://www.cmtbusan.kr/service/${slug}`;
+  const metaTitle = `${service.title} | 화학물질관리기술(CMT)`;
+  const metaDesc = service.overview
+    ? service.overview.substring(0, 155) + (service.overview.length > 155 ? "..." : "")
+    : `${service.title} 전문 컨설팅 — 화학물질관리기술(CMT)`;
+
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>{metaTitle}</title>
+        <meta name="description" content={metaDesc} />
+        <link rel="canonical" href={pageUrl} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:title" content={metaTitle} />
+        <meta property="og:description" content={metaDesc} />
+        <meta name="twitter:title" content={metaTitle} />
+        <meta name="twitter:description" content={metaDesc} />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "name": service.title,
+          "description": metaDesc,
+          "url": pageUrl,
+          "provider": {
+            "@id": "https://www.cmtbusan.kr/#organization"
+          },
+          "areaServed": "부산, 울산, 경남 포함 전국",
+          "serviceType": service.law ? `${service.law} ${service.lawArticle}` : "화학안전 컨설팅"
+        })}</script>
+      </Helmet>
       <Header />
 
       {/* ── Breadcrumb + Hero ── */}

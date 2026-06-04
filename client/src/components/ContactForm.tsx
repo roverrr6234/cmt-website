@@ -1,14 +1,13 @@
 /**
  * Design: "Authoritative Counsel" — Clean form with navy/gold accents
  * Sends inquiry via Vercel API Route (backend email sending)
- * Security: Input validation, Rate limiting, XSS prevention with DOMPurify
+ * Security: Input validation, Rate limiting, server-side XSS prevention
  */
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import type { ServiceData } from "@/lib/types";
 import { Send, Phone, Mail, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import DOMPurify from "dompurify";
 import { getCompanyInfo, getAllServices } from "@/lib/sanity";
 import { convertSanityServiceList } from "@/lib/sanityToService";
 

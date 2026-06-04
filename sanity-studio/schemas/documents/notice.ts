@@ -84,16 +84,20 @@ export const notice = defineType({
       of: [
         {
           type: "file",
+          options: {
+            accept: ".pdf,.doc,.docx,.xls,.xlsx,.hwp,.hwpx,.zip",
+          },
           fields: [
             defineField({
               name: "description",
               title: "파일 설명",
               type: "string",
-              description: "파일 옆에 표시되는 설명 텍스트",
+              description: "파일 옆에 표시되는 설명 텍스트 (예: 개정안 전문.pdf)",
             }),
           ],
         },
       ],
+      description: "허용 형식: PDF, Word, Excel, 한글(HWP), ZIP",
     }),
   ],
   orderings: [
