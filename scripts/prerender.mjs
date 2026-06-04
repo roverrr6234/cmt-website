@@ -33,20 +33,41 @@ function esc(s) {
 }
 
 /**
- * base HTML(SPA 셸)에 페이지별 메타 + 본문을 주입합니다.
+ * base HTML(SPA 셸)에 페이지별 메타 + 본문 + 추가 JSON-LD를 주입합니다.
  * React는 createRoot().render()로 root 내용을 완전히 교체하므로 hydration 충돌 없음.
  */
-function injectPage(baseHtml, { title, description, canonical, ogUrl, ogTitle, ogDesc, bodyHtml }) {
-  return baseHtml
+function injectPage(baseHtml, {
+  title,
+  description,
+  canonical,
+  ogUrl,
+  ogTitle,
+  ogDesc,
+  ogType = "website",
+  bodyHtml,
+  extraJsonLd = [],   // 추가 JSON-LD 객체 배열
+}) {
+  let html = baseHtml
     .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
     .replace(/(<meta name="description" content=")[^"]*"/, `$1${description}"`)
     .replace(/(<link rel="canonical" href=")[^"]*"/, `$1${canonical}"`)
+    .replace(/(<meta property="og:type" content=")[^"]*"/, `$1${ogType}"`)
     .replace(/(<meta property="og:url" content=")[^"]*"/, `$1${ogUrl}"`)
     .replace(/(<meta property="og:title" content=")[^"]*"/, `$1${ogTitle}"`)
     .replace(/(<meta property="og:description" content=")[^"]*"/, `$1${ogDesc}"`)
     .replace(/(<meta name="twitter:title" content=")[^"]*"/, `$1${ogTitle}"`)
     .replace(/(<meta name="twitter:description" content=")[^"]*"/, `$1${ogDesc}"`)
     .replace('<div id="root"></div>', `<div id="root">${bodyHtml}</div>`);
+
+  // 추가 JSON-LD 블록을 </head> 직전에 삽입
+  if (extraJsonLd.length > 0) {
+    const ldBlocks = extraJsonLd
+      .map(obj => `  <script type="application/ld+json">\n  ${JSON.stringify(obj, null, 2)}\n  </script>`)
+      .join("\n");
+    html = html.replace("</head>", `${ldBlocks}\n</head>`);
+  }
+
+  return html;
 }
 
 function writeFile(relPath, html) {
@@ -143,6 +164,46 @@ async function main() {
   </section>
 </article>`;
 
+    // 서비스 페이지 전용 JSON-LD (Service + BreadcrumbList)
+    const extraJsonLd = [
+      {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": svc.title,
+        "description": rawDesc.substring(0, 155),
+        "url": url,
+        "provider": { "@id": "https://www.cmtbusan.kr/#organization" },
+        "areaServed": "부산, 울산, 경남 포함 전국",
+        "serviceType": svc.law
+          ? `${svc.law} ${svc.lawArticle}`
+          : "화학안전 컨설팅",
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "홈",
+            "item": "https://www.cmtbusan.kr",
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "주요 업무",
+            "item": "https://www.cmtbusan.kr/#services",
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": svc.title,
+            "item": url,
+          },
+        ],
+      },
+    ];
+
     const html = injectPage(baseHtml, {
       title,
       description: desc,
@@ -150,7 +211,9 @@ async function main() {
       ogUrl: url,
       ogTitle: title,
       ogDesc: desc,
+      ogType: "article",
       bodyHtml,
+      extraJsonLd,
     });
     writeFile(`service/${slug}/index.html`, html);
   }
@@ -202,7 +265,18 @@ async function main() {
         ogUrl: noticUrl,
         ogTitle: noticTitle,
         ogDesc: esc(noticDesc),
+        ogType: "website",
         bodyHtml,
+        extraJsonLd: [
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "홈", "item": "https://www.cmtbusan.kr" },
+              { "@type": "ListItem", "position": 2, "name": "알림마당", "item": noticUrl },
+            ],
+          },
+        ],
       })
     );
   }
@@ -236,7 +310,18 @@ async function main() {
         ogUrl: contactUrl,
         ogTitle: contactTitle,
         ogDesc: esc(contactDesc),
+        ogType: "website",
         bodyHtml,
+        extraJsonLd: [
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "홈", "item": "https://www.cmtbusan.kr" },
+              { "@type": "ListItem", "position": 2, "name": "상담 신청", "item": contactUrl },
+            ],
+          },
+        ],
       })
     );
   }
