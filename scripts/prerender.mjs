@@ -60,9 +60,13 @@ function injectPage(baseHtml, {
     .replace('<div id="root"></div>', `<div id="root">${bodyHtml}</div>`);
 
   // 추가 JSON-LD 블록을 </head> 직전에 삽입
+  // < → < 이스케이프: Sanity 데이터에 </script>가 포함돼도 스크립트 태그를 벗어나지 못함
   if (extraJsonLd.length > 0) {
     const ldBlocks = extraJsonLd
-      .map(obj => `  <script type="application/ld+json">\n  ${JSON.stringify(obj, null, 2)}\n  </script>`)
+      .map(obj => {
+        const safe = JSON.stringify(obj, null, 2).replace(/</g, "\\u003c");
+        return `  <script type="application/ld+json">\n  ${safe}\n  </script>`;
+      })
       .join("\n");
     html = html.replace("</head>", `${ldBlocks}\n</head>`);
   }
