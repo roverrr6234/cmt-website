@@ -32,6 +32,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  // 시크릿 필수 — 미설정 시 즉시 거부
+  const webhookSecret = process.env.SANITY_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error("[sanity-webhook] SANITY_WEBHOOK_SECRET 미설정");
+    return res.status(500).json({ error: "Webhook secret not configured" });
+  }
+
   // raw body 읽기 (서명 검증에 필요)
   let rawBody: Buffer;
   try {
@@ -40,12 +47,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Failed to read request body" });
   }
 
-  // 서명 헤더가 있을 때만 HMAC 검증 (없으면 classic webhook으로 간주 — 허용)
   const signatureHeader = req.headers["sanity-webhook-signature"] as string | undefined;
-  const webhookSecret = process.env.SANITY_WEBHOOK_SECRET;
 
-  if (signatureHeader && webhookSecret) {
-    // Sanity 서명 포맷 파싱: "t=<timestamp>,v1=<hmac-hex>"
+  if (signatureHeader) {
+    // GROQ-powered webhook: HMAC-SHA256 서명 검증
     const parts: Record<string, string> = {};
     for (const segment of signatureHeader.split(",")) {
       const eq = segment.indexOf("=");
@@ -59,7 +64,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(401).json({ error: "Malformed sanity-webhook-signature header" });
     }
 
-    // HMAC-SHA256("<timestamp>.<rawBody>")
+    // 리플레이 공격 방지: 타임스탬프가 5분 이내여야 함
+    const tsSec = parseInt(timestamp, 10);
+    if (isNaN(tsSec) || Math.abs(Date.now() / 1000 - tsSec) > 300) {
+      return res.status(401).json({ error: "Webhook timestamp out of range" });
+    }
+
     const hmac = crypto.createHmac("sha256", webhookSecret);
     hmac.update(`${timestamp}.`);
     hmac.update(rawBody);
@@ -74,6 +84,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       !crypto.timingSafeEqual(receivedBuf, expectedBuf)
     ) {
       return res.status(401).json({ error: "Invalid webhook signature" });
+    }
+  } else {
+    // Classic webhook: URL 쿼리 토큰으로 인증 (?token=<secret>)
+    const urlToken = req.query["token"] as string | undefined;
+    const expectedToken = Buffer.from(webhookSecret);
+    const receivedToken = Buffer.from(urlToken ?? "");
+
+    if (
+      receivedToken.length === 0 ||
+      receivedToken.length !== expectedToken.length ||
+      !crypto.timingSafeEqual(receivedToken, expectedToken)
+    ) {
+      return res.status(401).json({ error: "Invalid token" });
     }
   }
 
