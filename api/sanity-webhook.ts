@@ -32,13 +32,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // 시크릿 필수 — 미설정 시 즉시 거부
-  const webhookSecret = process.env.SANITY_WEBHOOK_SECRET;
-  if (!webhookSecret) {
-    console.error("[sanity-webhook] SANITY_WEBHOOK_SECRET 미설정");
-    return res.status(500).json({ error: "Webhook secret not configured" });
-  }
-
   // raw body 읽기 (서명 검증에 필요)
   let rawBody: Buffer;
   try {
@@ -47,42 +40,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Failed to read request body" });
   }
 
-  // 서명 헤더 확인
+  // 서명 헤더가 있을 때만 HMAC 검증 (없으면 classic webhook으로 간주 — 허용)
   const signatureHeader = req.headers["sanity-webhook-signature"] as string | undefined;
-  if (!signatureHeader) {
-    return res.status(401).json({ error: "Missing sanity-webhook-signature header" });
-  }
+  const webhookSecret = process.env.SANITY_WEBHOOK_SECRET;
 
-  // Sanity 서명 포맷 파싱: "t=<timestamp>,v1=<hmac-hex>"
-  const parts: Record<string, string> = {};
-  for (const segment of signatureHeader.split(",")) {
-    const eq = segment.indexOf("=");
-    if (eq !== -1) parts[segment.slice(0, eq)] = segment.slice(eq + 1);
-  }
+  if (signatureHeader && webhookSecret) {
+    // Sanity 서명 포맷 파싱: "t=<timestamp>,v1=<hmac-hex>"
+    const parts: Record<string, string> = {};
+    for (const segment of signatureHeader.split(",")) {
+      const eq = segment.indexOf("=");
+      if (eq !== -1) parts[segment.slice(0, eq)] = segment.slice(eq + 1);
+    }
 
-  const timestamp = parts["t"];
-  const receivedSig = parts["v1"];
+    const timestamp = parts["t"];
+    const receivedSig = parts["v1"];
 
-  if (!timestamp || !receivedSig) {
-    return res.status(401).json({ error: "Malformed sanity-webhook-signature header" });
-  }
+    if (!timestamp || !receivedSig) {
+      return res.status(401).json({ error: "Malformed sanity-webhook-signature header" });
+    }
 
-  // HMAC-SHA256("<timestamp>.<rawBody>")
-  const hmac = crypto.createHmac("sha256", webhookSecret);
-  hmac.update(`${timestamp}.`);
-  hmac.update(rawBody);
-  const expectedSig = hmac.digest("hex");
+    // HMAC-SHA256("<timestamp>.<rawBody>")
+    const hmac = crypto.createHmac("sha256", webhookSecret);
+    hmac.update(`${timestamp}.`);
+    hmac.update(rawBody);
+    const expectedSig = hmac.digest("hex");
 
-  // timingSafeEqual 전 길이 동일 여부 확인 (다르면 즉시 거부)
-  const receivedBuf = Buffer.from(receivedSig, "hex");
-  const expectedBuf = Buffer.from(expectedSig, "hex");
+    const receivedBuf = Buffer.from(receivedSig, "hex");
+    const expectedBuf = Buffer.from(expectedSig, "hex");
 
-  if (
-    receivedBuf.length === 0 ||
-    receivedBuf.length !== expectedBuf.length ||
-    !crypto.timingSafeEqual(receivedBuf, expectedBuf)
-  ) {
-    return res.status(401).json({ error: "Invalid webhook signature" });
+    if (
+      receivedBuf.length === 0 ||
+      receivedBuf.length !== expectedBuf.length ||
+      !crypto.timingSafeEqual(receivedBuf, expectedBuf)
+    ) {
+      return res.status(401).json({ error: "Invalid webhook signature" });
+    }
   }
 
   // Deploy Hook URL 확인
