@@ -212,6 +212,15 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom"],
+          "vendor-sanity": ["@sanity/client", "@sanity/image-url", "@portabletext/react"],
+          "vendor-ui": ["lucide-react", "sonner", "wouter"],
+        },
+      },
+    },
   },
   server: {
     port: 3000,

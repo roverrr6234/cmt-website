@@ -73,6 +73,8 @@ export default function Header() {
               <img
                 src={logoUrl}
                 alt="화학물질관리기술 로고"
+                fetchPriority="high"
+                decoding="async"
                 className="h-11 sm:h-[52px] lg:h-[60px] w-auto object-contain"
               />
             )}
