@@ -23,7 +23,6 @@ import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import StickyPhone from "@/components/StickyPhone";
 import type { ServiceData } from "@/lib/types";
-import { images } from "@/lib/images";
 import { getHomePage, getAllServices, getCompanyInfo } from "@/lib/sanity";
 import { convertSanityServiceList } from "@/lib/sanityToService";
 import { Helmet } from "react-helmet-async";
@@ -203,12 +202,9 @@ export default function Home() {
       {/* Hero Section — enlarged slogan + bigger CTA */}
       <section className="relative min-h-[540px] sm:min-h-[600px] lg:min-h-[680px] flex items-center overflow-hidden">
         {/* Background image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${images.hero})` }}
-        />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/95 via-[#000000]/55 to-[#000000]/25" />
+        {/* Background — 네이비 그라데이션 (외부 CDN 이미지 의존 제거) */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-[#13233d] to-[#1f3556]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#000000]/70 via-transparent to-transparent" />
 
         <div className="relative container py-20 sm:py-24 lg:py-28">
           {/* Slogan — bigger, bolder */}
@@ -408,11 +404,7 @@ export default function Home() {
 
       {/* CTA Section — link goes to /contact (page top) */}
       <section className="relative py-20 lg:py-28 overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${images.ctaBackground})` }}
-        />
-        <div className="absolute inset-0 bg-navy/85" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0a1628] via-[#13233d] to-[#0a1628]" />
         <div className="relative container text-center">
           <FadeInSection>
             <h2 className="text-2xl lg:text-4xl font-bold text-white mb-6">

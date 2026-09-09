@@ -19,7 +19,10 @@
 | 11 | **Sanity 웹훅 서명 검증 버그** — 타임스탬프를 초로(실제는 밀리초), 서명을 hex로(실제는 base64url) 비교 → 6월 5일 이후 모든 웹훅이 401 | Sanity에 글을 올려도 Vercel 재배포가 안 됨 → 크롤러용 HTML이 6월 5일에 멈춤 | **수정** (`@sanity/webhook` 공식 검증으로 교체, 6개 케이스 테스트) |
 | 12 | Vercel에 `SMTP_FROM_EMAIL` 누락 | 상담 메일 발신 실패 가능성 | **수정** (2026-09-10 Vercel에 추가, 재배포 시 적용) |
 | 13 | **Manus 편집기 런타임(약 367KB 인라인 JS, 자체 React 포함)이 운영 빌드의 모든 페이지에 주입됨** + 모든 요소에 `data-loc="소스경로:줄"` 속성 | index.html 375KB, 매 방문마다 불필요한 파싱·실행, 소스 경로 노출. 페이지 멈춤 현상의 유력 원인 | **수정** (개발 서버에서만 활성화; index.html 375KB → 8KB) |
-| 14 | 홈 Hero/CTA 배경 이미지가 Manus CDN(`d2xsxph8kpxj0f.cloudfront.net`) 외부 URL에 의존 | Manus 측에서 자산을 지우면 홈 배경이 사라짐 | **미수정 — 권장**: 두 이미지를 내려받아 `client/public/images/`에 두고 `client/src/lib/images.ts`의 `hero`, `ctaBackground` 경로만 바꾸면 됨 |
+| 14 | **홈 Hero/CTA/About 배경 이미지가 Manus CDN(`d2xsxph8kpxj0f.cloudfront.net`)에 있었고 전부 403(삭제됨)** | 홈 첫 화면 배경이 빈 상태로 서비스되고 있었음 | **수정** (네이비 그라데이션 CSS로 대체, 외부 의존 제거) |
+| 15 | `og-image.png`가 1200×630으로 선언됐지만 실제 파일은 로고(814×158) | 카톡/페북/슬랙 공유 미리보기 깨짐 | **수정** (로고 + 브랜드 색으로 1200×630 재생성) |
+| 16 | 페이지 1회 로드에 Sanity 요청 12회(헤더·푸터·본문·상담폼·플로팅버튼이 같은 문서를 각자 요청), 실패 시 재시도로 70회+ | Sanity 무료 플랜 API 한도 소모, 로딩 지연 | **수정** (사이트 공통 문서 5종 세션 캐시, TTL 5분) |
+| 17 | 라우트에 없는 `pages/Blog.tsx` (죽은 CDN 이미지 참조) | 없음 (정리) | 삭제 |
 
 SEO 태그, 구조화 데이터(Organization/LocalBusiness), robots.txt, 서비스 5개 페이지 프리렌더링, Google/네이버 인증 태그는 이미 정상이라 손대지 않았습니다.
 
@@ -37,8 +40,12 @@ SEO 태그, 구조화 데이터(Organization/LocalBusiness), robots.txt, 서비�
 - `client/index.html` — Umami 태그 제거, viewport 수정, 페이지가 다시 선언하는 5개 태그에 `data-rh="true"` 표시.
 - `client/src/main.tsx` — 앱 시작 시 `data-rh="true"` 정적 태그 제거 (크롤러는 정적 태그, 브라우저는 페이지 태그만 봄).
 - `vite.config.ts` — Manus 개발 플러그인 4종을 `vite dev`에서만 로드. 운영 빌드는 react + tailwind만.
+- `client/src/pages/Home.tsx` — Hero/CTA 배경을 죽은 CDN 이미지 대신 네이비 그라데이션으로.
+- `client/src/lib/images.ts` — 죽은 CDN URL 제거 (serviceData 폴백용 키는 유지).
+- `client/src/lib/sanity.ts` — `companyInfo/homePage/siteHeader/siteFooter/services` 세션 캐시.
+- `client/public/og-image.png` — 1200×630 재생성.
 - `package.json` — `@vercel/analytics`, `@sanity/webhook` 추가.
-- 삭제: `client/public/sitemap.xml`, `client/public/rss.xml`, `client/src/pages/RSSFeed.tsx`, `client/src/lib/rss-generator.ts`, `desktop.ini`.
+- 삭제: `client/public/sitemap.xml`, `client/public/rss.xml`, `client/src/pages/RSSFeed.tsx`, `client/src/lib/rss-generator.ts`, `client/src/pages/Blog.tsx`, `desktop.ini`.
 
 ## Preview 검증 시 주의
 
@@ -74,6 +81,13 @@ Sanity CORS 허용 목록에 `www.cmtbusan.kr`만 있어서 `*.vercel.app` Previ
 ## 롤백
 
 문제가 생기면 Vercel → Deployments → 이전 배포 → "Promote to Production" (1분). 코드 롤백은 `git revert` 한 커밋.
+
+## Manus 의존성 현황 (2026-09-10 기준)
+
+운영 사이트(www.cmtbusan.kr)는 Manus 없이 동작한다.
+- 제거됨: Manus 런타임 주입, `data-loc` 속성, Manus CDN 이미지 의존.
+- 남은 것(운영 무관): `vite dev` 전용 플러그인 4종(`vite.config.ts`), `client/public/__manus__/debug-collector.js`(개발 서버 전용), `client/public/manus-storage/` 폴더명(로고 파일 위치일 뿐).
+- 이미지 자산은 로컬(로고, OG) + Sanity(서비스 상세 `sections`)만 사용.
 
 ## 손대지 않은 것 / 추후 과제
 
