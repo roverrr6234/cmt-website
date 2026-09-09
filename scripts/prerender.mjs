@@ -47,16 +47,17 @@ function injectPage(baseHtml, {
   bodyHtml,
   extraJsonLd = [],   // 추가 JSON-LD 객체 배열
 }) {
+  // index.html 의 일부 태그는 data-rh="true" 속성을 갖는다(react-helmet-async 중복 방지). 속성 순서 무관하게 매칭.
   let html = baseHtml
     .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
-    .replace(/(<meta name="description" content=")[^"]*"/, `$1${description}"`)
-    .replace(/(<link rel="canonical" href=")[^"]*"/, `$1${canonical}"`)
-    .replace(/(<meta property="og:type" content=")[^"]*"/, `$1${ogType}"`)
-    .replace(/(<meta property="og:url" content=")[^"]*"/, `$1${ogUrl}"`)
-    .replace(/(<meta property="og:title" content=")[^"]*"/, `$1${ogTitle}"`)
-    .replace(/(<meta property="og:description" content=")[^"]*"/, `$1${ogDesc}"`)
-    .replace(/(<meta name="twitter:title" content=")[^"]*"/, `$1${ogTitle}"`)
-    .replace(/(<meta name="twitter:description" content=")[^"]*"/, `$1${ogDesc}"`)
+    .replace(/(<meta name="description"(?: data-rh="true")? content=")[^"]*"/, `$1${description}"`)
+    .replace(/(<link rel="canonical"(?: data-rh="true")? href=")[^"]*"/, `$1${canonical}"`)
+    .replace(/(<meta property="og:type"(?: data-rh="true")? content=")[^"]*"/, `$1${ogType}"`)
+    .replace(/(<meta property="og:url"(?: data-rh="true")? content=")[^"]*"/, `$1${ogUrl}"`)
+    .replace(/(<meta property="og:title"(?: data-rh="true")? content=")[^"]*"/, `$1${ogTitle}"`)
+    .replace(/(<meta property="og:description"(?: data-rh="true")? content=")[^"]*"/, `$1${ogDesc}"`)
+    .replace(/(<meta name="twitter:title"(?: data-rh="true")? content=")[^"]*"/, `$1${ogTitle}"`)
+    .replace(/(<meta name="twitter:description"(?: data-rh="true")? content=")[^"]*"/, `$1${ogDesc}"`)
     .replace('<div id="root"></div>', `<div id="root">${bodyHtml}</div>`);
 
   // 추가 JSON-LD 블록을 </head> 직전에 삽입
@@ -86,6 +87,69 @@ function listItems(arr) {
     .filter(Boolean)
     .map((s) => `<li>${esc(s)}</li>`)
     .join("");
+}
+
+/** Sanity Portable Text → 단순 HTML (크롤러용). 지원: block(normal/h2/h3/blockquote, 목록), 마크(strong/em/underline/link), image */
+function portableTextToHtml(blocks, imgBase) {
+  if (!Array.isArray(blocks)) return "";
+  const out = [];
+  let listType = null;
+  const closeList = () => {
+    if (listType) { out.push(`</${listType}>`); listType = null; }
+  };
+  for (const b of blocks) {
+    if (!b || typeof b !== "object") continue;
+    if (b._type === "image") {
+      closeList();
+      const ref = b.asset?._ref || "";
+      const [, id, dims, fmt] = ref.split("-");
+      if (id && dims && fmt) {
+        out.push(`<figure><img src="${imgBase}/${id}-${dims}.${fmt}?w=800" alt="${esc(b.alt || "")}" loading="lazy" />${b.caption ? `<figcaption>${esc(b.caption)}</figcaption>` : ""}</figure>`);
+      }
+      continue;
+    }
+    if (b._type !== "block") continue;
+    const markDefs = Array.isArray(b.markDefs) ? b.markDefs : [];
+    const inner = (b.children || []).map((c) => {
+      let t = esc(c?.text ?? "");
+      for (const m of c?.marks || []) {
+        if (m === "strong") t = `<strong>${t}</strong>`;
+        else if (m === "em") t = `<em>${t}</em>`;
+        else if (m === "underline") t = `<u>${t}</u>`;
+        else {
+          const def = markDefs.find((d) => d._key === m);
+          if (def && def._type === "link" && def.href) t = `<a href="${esc(def.href)}" rel="noopener noreferrer">${t}</a>`;
+        }
+      }
+      return t;
+    }).join("");
+    if (b.listItem) {
+      const want = b.listItem === "number" ? "ol" : "ul";
+      if (listType !== want) { closeList(); out.push(`<${want}>`); listType = want; }
+      out.push(`<li>${inner}</li>`);
+      continue;
+    }
+    closeList();
+    const style = b.style || "normal";
+    if (style === "h2") out.push(`<h2>${inner}</h2>`);
+    else if (style === "h3") out.push(`<h3>${inner}</h3>`);
+    else if (style === "h4") out.push(`<h4>${inner}</h4>`);
+    else if (style === "blockquote") out.push(`<blockquote>${inner}</blockquote>`);
+    else out.push(`<p>${inner}</p>`);
+  }
+  closeList();
+  return out.join("\n");
+}
+
+function plainText(blocks, max = 155) {
+  if (!Array.isArray(blocks)) return "";
+  const t = blocks
+    .filter((b) => b?._type === "block" && Array.isArray(b.children))
+    .map((b) => b.children.map((c) => c?.text ?? "").join(""))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return t.length > max ? t.slice(0, max - 1) + "…" : t;
 }
 
 async function main() {
@@ -226,21 +290,24 @@ async function main() {
   let notices = [];
   try {
     notices = await sanity.fetch(
-      `*[_type == "notice" && ${DRAFT}] | order(isPinned desc, publishedAt desc)[0...30] {
-        _id, title, excerpt, publishedAt, category
+      `*[_type == "notice" && ${DRAFT} && defined(title)] | order(isPinned desc, publishedAt desc)[0...200] {
+        _id, title, excerpt, publishedAt, category, content,
+        attachments[]{ _key, description, asset }
       }`
     );
     console.log(`[prerender] 공지 ${notices.length}개 수신`);
   } catch (e) {
     console.warn("[prerender] Sanity 공지 조회 실패:", e.message);
   }
+  const noticeUrl = (n) => `https://www.cmtbusan.kr/notices/${encodeURIComponent(n._id)}`;
 
   {
+    // 목록: 각 글은 개별 페이지 링크를 가진다 (경로는 client/src/lib/notice-ui.ts noticePath() 와 동일)
     const items = notices
       .map(
         (n) => `
 <article>
-  <h2>${esc(n.title)}</h2>
+  <h2><a href="/notices/${encodeURIComponent(n._id)}">${esc(n.title)}</a></h2>
   ${n.category ? `<p><small>${esc(n.category)}</small></p>` : ""}
   ${n.excerpt ? `<p>${esc(n.excerpt)}</p>` : ""}
   ${n.publishedAt ? `<time datetime="${n.publishedAt.slice(0, 10)}">${n.publishedAt.slice(0, 10)}</time>` : ""}
@@ -283,6 +350,92 @@ async function main() {
         ],
       })
     );
+  }
+
+  /* ── 2-b. 알림마당 개별 글 페이지 ── */
+  {
+    const projectId = process.env.VITE_SANITY_PROJECT_ID || "xwuem73x";
+    const dataset = process.env.VITE_SANITY_DATASET || "production";
+    const imgBase = `https://cdn.sanity.io/images/${projectId}/${dataset}`;
+    const fileBase = `https://cdn.sanity.io/files/${projectId}/${dataset}`;
+    let written = 0;
+
+    for (const n of notices) {
+      if (!n?._id || !n.title) continue;
+      const url = noticeUrl(n);
+      const relPath = `notices/${encodeURIComponent(n._id)}/index.html`;
+      const title = `${esc(n.title)} | 알림마당 | 화학물질관리기술(CMT)`;
+      const rawDesc =
+        (n.excerpt && n.excerpt.trim()) ||
+        plainText(n.content) ||
+        "화학물질관리기술(CMT) 알림마당 — 법령 개정, 공지사항, 업계 동향 안내";
+      const desc = esc(rawDesc.substring(0, 155));
+      const dateIso = n.publishedAt ? n.publishedAt.slice(0, 10) : "";
+
+      const attachHtml = (n.attachments || [])
+        .filter((a) => a?.asset?._ref)
+        .map((a) => {
+          const [, id, ext] = a.asset._ref.split("-");
+          return `<li><a href="${fileBase}/${id}.${ext}">${esc(a.description || "파일 다운로드")}</a></li>`;
+        })
+        .join("");
+
+      const bodyHtml = `
+<article>
+  <nav aria-label="breadcrumb">
+    <a href="/">홈</a> &gt; <a href="/notices">알림마당</a> &gt; <span>${esc(n.title)}</span>
+  </nav>
+  ${n.category ? `<p><small>${esc(n.category)}</small></p>` : ""}
+  <h1>${esc(n.title)}</h1>
+  ${dateIso ? `<p><time datetime="${dateIso}">${dateIso}</time></p>` : ""}
+  ${n.excerpt ? `<p><strong>${esc(n.excerpt)}</strong></p>` : ""}
+  ${portableTextToHtml(n.content, imgBase)}
+  ${attachHtml ? `<section><h2>첨부파일</h2><ul>${attachHtml}</ul></section>` : ""}
+  <p><a href="/notices">알림마당 목록으로</a> · <a href="/contact">무료 상담 신청</a></p>
+</article>`;
+
+      const extraJsonLd = [
+        {
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: n.title,
+          description: rawDesc.substring(0, 155),
+          datePublished: n.publishedAt || undefined,
+          dateModified: n.publishedAt || undefined,
+          mainEntityOfPage: url,
+          articleSection: n.category || "공지사항",
+          author: { "@id": "https://www.cmtbusan.kr/#organization" },
+          publisher: { "@id": "https://www.cmtbusan.kr/#organization" },
+          inLanguage: "ko-KR",
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "홈", item: "https://www.cmtbusan.kr" },
+            { "@type": "ListItem", position: 2, name: "알림마당", item: "https://www.cmtbusan.kr/notices" },
+            { "@type": "ListItem", position: 3, name: n.title, item: url },
+          ],
+        },
+      ];
+
+      writeFile(
+        relPath,
+        injectPage(baseHtml, {
+          title,
+          description: desc,
+          canonical: url,
+          ogUrl: url,
+          ogTitle: title,
+          ogDesc: desc,
+          ogType: "article",
+          bodyHtml,
+          extraJsonLd,
+        })
+      );
+      written++;
+    }
+    console.log(`[prerender] 알림마당 개별 페이지 ${written}개 생성`);
   }
 
   /* ── 3. 상담 신청 ── */

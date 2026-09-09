@@ -29,8 +29,8 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
       sanity.fetch<{ slug: { current: string }; _updatedAt: string }[]>(
         `*[_type == "service" && ${DRAFT}]{ slug, _updatedAt } | order(sortOrder asc)`
       ),
-      sanity.fetch<{ _id: string; publishedAt: string }[]>(
-        `*[_type == "notice" && ${DRAFT}]{ _id, publishedAt } | order(publishedAt desc)[0...50]`
+      sanity.fetch<{ _id: string; publishedAt: string; _updatedAt: string }[]>(
+        `*[_type == "notice" && ${DRAFT} && defined(title)] | order(publishedAt desc)[0...200]{ _id, publishedAt, _updatedAt }`
       ),
     ]);
 
@@ -42,6 +42,13 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
         loc: `${BASE}/service/${s.slug?.current}`,
         lastmod: s._updatedAt ? s._updatedAt.slice(0, 10) : today,
         priority: "0.9",
+        changefreq: "monthly",
+      })),
+      // 알림마당 개별 글 — 경로는 client/src/lib/notice-ui.ts 의 noticePath() 와 동일해야 함
+      ...notices.map((n) => ({
+        loc: `${BASE}/notices/${encodeURIComponent(n._id)}`,
+        lastmod: (n._updatedAt || n.publishedAt || today).slice(0, 10),
+        priority: "0.7",
         changefreq: "monthly",
       })),
     ].filter((u) => u.loc && !u.loc.includes("undefined"));
