@@ -5,94 +5,25 @@
  */
 
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { Link } from "wouter";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
-import { PortableText } from "@portabletext/react";
 import DOMPurify from "dompurify";
 import {
   FileText,
   Pin,
   ChevronLeft,
   ChevronRight,
-  Calendar,
   Loader2,
   AlertCircle,
-  Download,
   RefreshCw,
-  ChevronDown,
+  Paperclip,
 } from "lucide-react";
-import {
-  sanityClient,
-  sanityImageUrl,
-  sanityFileUrl,
-  NOTICES_QUERY,
-  type SanityNotice,
-} from "@/lib/sanity";
+import { sanityClient, NOTICES_QUERY, type SanityNotice } from "@/lib/sanity";
+import { categoryColor, formatNoticeDate, noticePath } from "@/lib/notice-ui";
 
 const ITEMS_PER_PAGE = 10;
-
-const categoryColors: Record<string, string> = {
-  법령개정: "bg-red-100 text-red-800 border-red-200",
-  공지사항: "bg-blue-100 text-blue-800 border-blue-200",
-  업계동향: "bg-emerald-100 text-emerald-800 border-emerald-200",
-};
-
-/** Portable Text 커스텀 컴포넌트 */
-const portableTextComponents = {
-  types: {
-    image: ({ value }: any) => {
-      if (!value?.asset?._ref) return null;
-      const url = sanityImageUrl(value.asset._ref, 800);
-      return (
-        <figure className="my-4">
-          <img
-            src={url}
-            alt={value.alt || ""}
-            className="rounded-lg max-w-full h-auto border border-gray-200"
-            loading="lazy"
-          />
-          {value.caption && (
-            <figcaption className="text-xs text-gray-500 mt-2 text-center">
-              {value.caption}
-            </figcaption>
-          )}
-        </figure>
-      );
-    },
-  },
-  block: {
-    h2: ({ children }: any) => (
-      <h2 className="text-lg font-bold text-[#0a1628] mt-5 mb-2">{children}</h2>
-    ),
-    h3: ({ children }: any) => (
-      <h3 className="text-base font-semibold text-[#0a1628] mt-4 mb-2">{children}</h3>
-    ),
-    blockquote: ({ children }: any) => (
-      <blockquote className="border-l-4 border-[#0a1628] pl-4 py-2 my-3 bg-gray-50 text-gray-700 italic">
-        {children}
-      </blockquote>
-    ),
-    normal: ({ children }: any) => (
-      <p className="text-sm text-gray-700 leading-relaxed mb-2">{children}</p>
-    ),
-  },
-  marks: {
-    link: ({ children, value }: any) => (
-      <a
-        href={value?.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-600 underline hover:text-blue-800"
-      >
-        {children}
-      </a>
-    ),
-    strong: ({ children }: any) => <strong className="font-bold">{children}</strong>,
-    em: ({ children }: any) => <em className="italic">{children}</em>,
-    underline: ({ children }: any) => <span className="underline">{children}</span>,
-  },
-};
 
 /** 정적 폴백 데이터 (Sanity 연결 실패 시) */
 const FALLBACK_NOTICES: SanityNotice[] = [
@@ -132,7 +63,8 @@ const FALLBACK_NOTICES: SanityNotice[] = [
   },
 ];
 
-const categories = ["전체", "법령개정", "공지사항", "업계동향"];
+/** 기본 카테고리 순서 — 데이터에 존재하는 카테고리는 자동으로 추가된다 */
+const BASE_CATEGORIES = ["공지사항", "법규 안내", "업무 안내", "법령개정", "업계동향", "기타"];
 
 export default function Notices() {
   const [notices, setNotices] = useState<SanityNotice[]>(FALLBACK_NOTICES);
@@ -141,7 +73,6 @@ export default function Notices() {
   const [useFallback, setUseFallback] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [currentPage, setCurrentPage] = useState(1);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const fetchNotices = useCallback(async () => {
     setLoading(true);
@@ -167,6 +98,13 @@ export default function Notices() {
     fetchNotices();
   }, [fetchNotices]);
 
+  const categories = useMemo(() => {
+    const present = new Set(notices.map((n) => n.category).filter(Boolean));
+    const ordered = BASE_CATEGORIES.filter((c) => present.has(c));
+    const extra = Array.from(present).filter((c) => !BASE_CATEGORIES.includes(c));
+    return ["전체", ...ordered, ...extra];
+  }, [notices]);
+
   const filteredNotices = useMemo(() => {
     if (selectedCategory === "전체") return notices;
     return notices.filter((n) => n.category === selectedCategory);
@@ -191,18 +129,6 @@ export default function Notices() {
   );
 
   const allDisplayed = [...pinnedNotices, ...pagedRegular];
-
-  const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      });
-    } catch {
-      return dateStr;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -254,7 +180,6 @@ export default function Notices() {
               onClick={() => {
                 setSelectedCategory(cat);
                 setCurrentPage(1);
-                setExpandedId(null);
               }}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors border ${
                 selectedCategory === cat
@@ -278,80 +203,46 @@ export default function Notices() {
         {!loading && allDisplayed.length > 0 && (
           <div className="space-y-3">
             {allDisplayed.map((notice) => (
-              <div
+              <Link
                 key={notice._id}
-                className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                href={noticePath(notice._id)}
+                className="block bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md hover:border-gray-300 transition-all"
               >
-                <button
-                  onClick={() =>
-                    setExpandedId(expandedId === notice._id ? null : notice._id)
-                  }
-                  className="w-full px-6 py-4 flex items-start justify-between gap-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex-1 text-left">
+                <div className="px-6 py-4 flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
                       {notice.isPinned && (
                         <Pin className="w-4 h-4 text-red-500 flex-shrink-0" />
                       )}
                       <span
-                        className={`text-xs px-2 py-1 rounded border ${
-                          categoryColors[notice.category]
-                        }`}
+                        className={`text-xs px-2 py-1 rounded border ${categoryColor(notice.category)}`}
                       >
-                        {notice.category}
+                        {notice.category || "공지사항"}
                       </span>
+                      {notice.attachments && notice.attachments.length > 0 && (
+                        <span className="flex items-center gap-1 text-xs text-gray-400">
+                          <Paperclip className="w-3.5 h-3.5" />
+                          첨부 {notice.attachments.length}
+                        </span>
+                      )}
                     </div>
-                    <h3 className="font-semibold text-[#0a1628] text-left">
+                    <h2 className="font-semibold text-[#0a1628] text-base leading-snug">
                       {DOMPurify.sanitize(notice.title, { ALLOWED_TAGS: [] })}
-                    </h3>
+                    </h2>
+                    {notice.excerpt && (
+                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                        {DOMPurify.sanitize(notice.excerpt, { ALLOWED_TAGS: [] })}
+                      </p>
+                    )}
                     <p className="text-sm text-gray-500 mt-1">
-                      {formatDate(notice.publishedAt)}
+                      <time dateTime={notice.publishedAt?.slice(0, 10)}>
+                        {formatNoticeDate(notice.publishedAt)}
+                      </time>
                     </p>
                   </div>
-                  <ChevronDown
-                    className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform ${
-                      expandedId === notice._id ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {/* Expanded Content */}
-                {expandedId === notice._id && (
-                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                    <p className="text-sm text-gray-700 mb-4">{DOMPurify.sanitize(notice.excerpt || "", { ALLOWED_TAGS: [] })}</p>
-
-                    {notice.body && (
-                      <div className="prose prose-sm max-w-none mb-4">
-                        <PortableText
-                          value={notice.body}
-                          components={portableTextComponents}
-                        />
-                      </div>
-                    )}
-
-                    {notice.attachments && notice.attachments.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <p className="text-xs font-semibold text-gray-600 mb-2">
-                          첨부파일
-                        </p>
-                        <div className="space-y-2">
-                          {notice.attachments.map((att) => (
-                            <a
-                              key={att._key}
-                              href={sanityFileUrl(att.asset._ref)}
-                              download
-                              className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
-                            >
-                              <Download className="w-4 h-4" />
-                              {att.description || "파일 다운로드"}
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0 mt-1" />
+                </div>
+              </Link>
             ))}
           </div>
         )}

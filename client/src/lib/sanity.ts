@@ -26,6 +26,26 @@ const builder = imageUrlBuilder(sanityClient);
 const DRAFT_FILTER = `!(_id in path("drafts.**"))`;
 
 /**
+ * 세션 캐시 — 헤더·푸터·홈·상담폼·플로팅버튼이 같은 문서(companyInfo/services 등)를
+ * 페이지마다 각자 요청해 한 페이지에 12회+ 나가던 것을 1회로 줄인다. TTL 5분.
+ */
+const CACHE_TTL_MS = 5 * 60 * 1000;
+const cache = new Map<string, { at: number; value: Promise<any> }>();
+function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.value as Promise<T>;
+  const value = load().then(
+    (v) => v,
+    (e) => {
+      cache.delete(key); // 실패는 캐시하지 않음
+      throw e;
+    },
+  );
+  cache.set(key, { at: Date.now(), value });
+  return value;
+}
+
+/**
  * Sanity 이미지 URL 빌더
  */
 export function urlFor(source: any) {
@@ -36,8 +56,10 @@ export function urlFor(source: any) {
 // ── 회사 정보 ──
 export async function getCompanyInfo() {
   try {
-    return await sanityClient.fetch(
+    return await cached("companyInfo", () =>
+      sanityClient.fetch(
       `*[_type == "companyInfo" && ${DRAFT_FILTER}][0]`,
+      ),
     );
   } catch (error) {
     console.error("Failed to fetch companyInfo:", error);
@@ -48,8 +70,10 @@ export async function getCompanyInfo() {
 // ── 홈페이지 ──
 export async function getHomePage() {
   try {
-    return await sanityClient.fetch(
+    return await cached("homePage", () =>
+      sanityClient.fetch(
       `*[_type == "homePage" && ${DRAFT_FILTER}][0]`,
+      ),
     );
   } catch (error) {
     console.error("Failed to fetch homePage:", error);
@@ -60,8 +84,10 @@ export async function getHomePage() {
 // ── 헤더 ──
 export async function getSiteHeader() {
   try {
-    return await sanityClient.fetch(
+    return await cached("siteHeader", () =>
+      sanityClient.fetch(
       `*[_type == "siteHeader" && ${DRAFT_FILTER}][0]`,
+      ),
     );
   } catch (error) {
     console.error("Failed to fetch siteHeader:", error);
@@ -72,8 +98,10 @@ export async function getSiteHeader() {
 // ── 푸터 ──
 export async function getSiteFooter() {
   try {
-    return await sanityClient.fetch(
+    return await cached("siteFooter", () =>
+      sanityClient.fetch(
       `*[_type == "siteFooter" && ${DRAFT_FILTER}][0]`,
+      ),
     );
   } catch (error) {
     console.error("Failed to fetch siteFooter:", error);
@@ -122,8 +150,10 @@ const SERVICE_FIELDS = `
 // ── 서비스 목록 (모든 서비스) ──
 export async function getAllServices() {
   try {
-    return await sanityClient.fetch(
+    return await cached("services", () =>
+      sanityClient.fetch(
       `*[_type == "service" && ${DRAFT_FILTER}] | order(sortOrder asc) { ${SERVICE_FIELDS} }`,
+      ),
     );
   } catch (error) {
     console.error("Failed to fetch services:", error);

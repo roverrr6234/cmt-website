@@ -196,10 +196,21 @@ function vitePluginStorageProxy(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy()];
+// Manus 개발 도구 플러그인은 개발 서버(vite dev)에서만 활성화한다.
+//  - jsxLocPlugin: 모든 요소에 data-loc="파일:줄" 삽입 → 소스 경로 노출 + HTML 비대
+//  - vitePluginManusRuntime: 약 367KB 인라인 스크립트(자체 React 포함)를 모든 페이지에 주입 → 운영에서 불필요
+//  - DebugCollector / StorageProxy: 개발 서버 미들웨어 전용
+// 운영 사이트(www.cmtbusan.kr)는 이들 없이 동작하며(client/src 에서 참조 없음), 제외 시 index.html 375KB → 약 8KB.
+const makePlugins = (command: "serve" | "build") => [
+  react(),
+  tailwindcss(),
+  ...(command === "serve"
+    ? [jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy()]
+    : []),
+];
 
-export default defineConfig({
-  plugins,
+export default defineConfig(({ command }) => ({
+  plugins: makePlugins(command),
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
@@ -240,4 +251,4 @@ export default defineConfig({
       deny: ["**/.*"],
     },
   },
-});
+}));

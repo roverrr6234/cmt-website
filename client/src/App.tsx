@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Route, Switch } from "wouter";
 import { HelmetProvider } from "react-helmet-async";
+import { Analytics } from "@vercel/analytics/react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
@@ -11,7 +12,7 @@ const Home = lazy(() => import("./pages/Home"));
 const ServiceDetail = lazy(() => import("./pages/ServiceDetail"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Notices = lazy(() => import("./pages/Notices"));
-const RSSFeed = lazy(() => import("./pages/RSSFeed"));
+const NoticeDetail = lazy(() => import("./pages/NoticeDetail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const TestSanity = lazy(() => import("./pages/TestSanity"));
 
@@ -23,8 +24,8 @@ function Router() {
         <Route path="/service/:slug" component={ServiceDetail} />
         <Route path="/contact" component={Contact} />
         <Route path="/notices" component={Notices} />
-        <Route path="/rss" component={RSSFeed} />
-        <Route path="/rss.xml" component={RSSFeed} />
+        <Route path="/notices/:id" component={NoticeDetail} />
+        {/* /rss.xml 은 vercel.json rewrite → api/rss.ts (서버 생성) */}
         {/* 개발 환경 전용 진단 페이지 — 운영 빌드에서는 라우트 비활성 */}
         {import.meta.env.DEV && (
           <Route path="/test-sanity" component={TestSanity} />
@@ -44,6 +45,8 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
+            {/* Vercel Web Analytics — Vercel 대시보드 > Analytics 에서 Enable 해야 수집 시작 */}
+            <Analytics />
           </TooltipProvider>
         </ThemeProvider>
       </ErrorBoundary>
