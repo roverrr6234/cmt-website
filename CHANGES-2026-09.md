@@ -10,7 +10,7 @@
 | 2 | `client/public/sitemap.xml` 정적 파일이 `/api/sitemap` 리라이트보다 먼저 서빙됨 (lastmod 2026-06-04 고정, URL 8개) | 동적 사이트맵이 무시됨. 알림마당 글 사이트맵 미등록 | **수정** |
 | 3 | `client/public/rss.xml` 정적 파일에 4월 20일자 폴백(가짜) 글 2개 고정. `/rss` React 페이지는 크롤러가 못 읽음 | RSS 구독/네이버 수집에 잘못된 내용 노출 | **수정** |
 | 4 | `index.html`의 Umami 분석 스크립트 `%VITE_ANALYTICS_ENDPOINT%` 미치환 (Vercel에 변수 없음 + CSP가 외부 스크립트 차단) | 방문자 통계 전무. 매 방문마다 404 요청 1회 | **수정** (Vercel Web Analytics로 교체) |
-| 5 | `og:url` / `og:title` / `og:description` / `canonical` / `description`이 정적 태그 + Helmet 태그로 **두 벌** 렌더링 | 카톡/페북 공유 시 어느 값이 잡힐지 불확실 | **수정** |
+| 5 | `og:url` / `og:title` / `og:description` / `canonical` / `description`이 정적 태그 + 페이지 태그로 **두 벌** 렌더링 (React 19는 `<meta>`를 head로 올리되 기존 태그를 교체하지 않음) | 카톡/페북 공유 시 어느 값이 잡힐지 불확실 | **수정** (`main.tsx`에서 앱 시작 시 `data-rh` 표시된 정적 태그 제거 → 페이지 태그만 남음) |
 | 6 | viewport `maximum-scale=1` | 모바일 확대 불가 (접근성) | **수정** |
 | 7 | 알림마당 필터 버튼(`법령개정/업계동향`)이 Sanity 스키마 카테고리(`법규 안내/업무 안내/기타`)와 불일치 | "법규 안내" 글 필터 불가, 배지 색상 누락 | **수정** (데이터 기반 동적 필터) |
 | 8 | 메인 CTA 버튼 문구 "무료 상담 신청**테스트**" | 첫 화면 신뢰도 | **코드 아님** — Sanity Studio에서 수정 필요 (아래) |
@@ -18,6 +18,8 @@
 | 10 | `desktop.ini` 커밋됨 | 없음 (정리) | 삭제 |
 | 11 | **Sanity 웹훅 서명 검증 버그** — 타임스탬프를 초로(실제는 밀리초), 서명을 hex로(실제는 base64url) 비교 → 6월 5일 이후 모든 웹훅이 401 | Sanity에 글을 올려도 Vercel 재배포가 안 됨 → 크롤러용 HTML이 6월 5일에 멈춤 | **수정** (`@sanity/webhook` 공식 검증으로 교체, 6개 케이스 테스트) |
 | 12 | Vercel에 `SMTP_FROM_EMAIL` 누락 | 상담 메일 발신 실패 가능성 | **수정** (2026-09-10 Vercel에 추가, 재배포 시 적용) |
+| 13 | **Manus 편집기 런타임(약 367KB 인라인 JS, 자체 React 포함)이 운영 빌드의 모든 페이지에 주입됨** + 모든 요소에 `data-loc="소스경로:줄"` 속성 | index.html 375KB, 매 방문마다 불필요한 파싱·실행, 소스 경로 노출. 페이지 멈춤 현상의 유력 원인 | **수정** (개발 서버에서만 활성화; index.html 375KB → 8KB) |
+| 14 | 홈 Hero/CTA 배경 이미지가 Manus CDN(`d2xsxph8kpxj0f.cloudfront.net`) 외부 URL에 의존 | Manus 측에서 자산을 지우면 홈 배경이 사라짐 | **미수정 — 권장**: 두 이미지를 내려받아 `client/public/images/`에 두고 `client/src/lib/images.ts`의 `hero`, `ctaBackground` 경로만 바꾸면 됨 |
 
 SEO 태그, 구조화 데이터(Organization/LocalBusiness), robots.txt, 서비스 5개 페이지 프리렌더링, Google/네이버 인증 태그는 이미 정상이라 손대지 않았습니다.
 
@@ -32,9 +34,15 @@ SEO 태그, 구조화 데이터(Organization/LocalBusiness), robots.txt, 서비�
 - `api/rss.ts` **(신규)** — 서버에서 RSS 2.0 생성.
 - `api/sanity-webhook.ts` — 서명 검증을 `@sanity/webhook`(공식)으로 교체. 밀리초 타임스탬프 5분 창, base64url 서명. Legacy `?token=` 방식은 호환 유지.
 - `vercel.json` — `/rss.xml → /api/rss` 리라이트, CSP `script-src`에 `https://va.vercel-scripts.com` 추가.
-- `client/index.html` — Umami 태그 제거, viewport 수정, Helmet이 관리하는 5개 태그에 `data-rh="true"` (중복 제거).
+- `client/index.html` — Umami 태그 제거, viewport 수정, 페이지가 다시 선언하는 5개 태그에 `data-rh="true"` 표시.
+- `client/src/main.tsx` — 앱 시작 시 `data-rh="true"` 정적 태그 제거 (크롤러는 정적 태그, 브라우저는 페이지 태그만 봄).
+- `vite.config.ts` — Manus 개발 플러그인 4종을 `vite dev`에서만 로드. 운영 빌드는 react + tailwind만.
 - `package.json` — `@vercel/analytics`, `@sanity/webhook` 추가.
 - 삭제: `client/public/sitemap.xml`, `client/public/rss.xml`, `client/src/pages/RSSFeed.tsx`, `client/src/lib/rss-generator.ts`, `desktop.ini`.
+
+## Preview 검증 시 주의
+
+Sanity CORS 허용 목록에 `www.cmtbusan.kr`만 있어서 `*.vercel.app` Preview에서는 브라우저의 Sanity 호출이 차단됨(목록·상세가 폴백/404로 보임). 크롤러용 정적 HTML·사이트맵·RSS는 서버에서 만들어지므로 Preview에서도 정상. 브라우저 동작은 Production에서 확인할 것.
 
 ## 검증한 것
 
