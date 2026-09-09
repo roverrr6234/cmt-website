@@ -7,14 +7,15 @@
  *
  * 보안:
  *   - SANITY_WEBHOOK_SECRET 미설정 시 500으로 즉시 거부 (선택 아님)
- *   - Sanity 실제 서명 포맷 "t=<ts>,v1=<sig>" 파싱
- *   - HMAC: SHA-256("<ts>.<rawBody>")
+ *   - Sanity 서명 포맷 "t=<ms>,v1=<base64url sig>" — @sanity/webhook 으로 검증
+ *   - HMAC: SHA-256("<ms>.<rawBody>"), base64url 인코딩
  *   - rawBody가 필요하므로 Vercel body parser 비활성
  *   - timingSafeEqual 전 버퍼 길이 동일 여부 확인
  */
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
+import { decodeSignatureHeader, isValidSignature } from "@sanity/webhook";
 
 // Vercel body parser 비활성 — 서명 검증에 raw bytes 필요
 export const config = { api: { bodyParser: false } };
@@ -50,39 +51,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const signatureHeader = req.headers["sanity-webhook-signature"] as string | undefined;
 
   if (signatureHeader) {
-    // GROQ-powered webhook: HMAC-SHA256 서명 검증
-    const parts: Record<string, string> = {};
-    for (const segment of signatureHeader.split(",")) {
-      const eq = segment.indexOf("=");
-      if (eq !== -1) parts[segment.slice(0, eq)] = segment.slice(eq + 1);
-    }
-
-    const timestamp = parts["t"];
-    const receivedSig = parts["v1"];
-
-    if (!timestamp || !receivedSig) {
+    // GROQ-powered webhook: Sanity 공식 검증 (@sanity/webhook)
+    //  - 헤더 형식 "t=<ms>,v1=<base64url(HMAC-SHA256(secret, `${t}.${rawBody}`))>"
+    //  - 이전 구현은 타임스탬프를 초 단위로, 서명을 hex로 가정해 항상 401이 났음 (2026-09-10 수정)
+    let decoded: { timestamp: number };
+    try {
+      decoded = decodeSignatureHeader(signatureHeader);
+    } catch {
       return res.status(401).json({ error: "Malformed sanity-webhook-signature header" });
     }
 
-    // 리플레이 공격 방지: 타임스탬프가 5분 이내여야 함
-    const tsSec = parseInt(timestamp, 10);
-    if (isNaN(tsSec) || Math.abs(Date.now() / 1000 - tsSec) > 300) {
+    // 리플레이 공격 방지: 타임스탬프(밀리초)가 5분 이내여야 함
+    if (Math.abs(Date.now() - decoded.timestamp) > 5 * 60 * 1000) {
       return res.status(401).json({ error: "Webhook timestamp out of range" });
     }
 
-    const hmac = crypto.createHmac("sha256", webhookSecret);
-    hmac.update(`${timestamp}.`);
-    hmac.update(rawBody);
-    const expectedSig = hmac.digest("hex");
-
-    const receivedBuf = Buffer.from(receivedSig, "hex");
-    const expectedBuf = Buffer.from(expectedSig, "hex");
-
-    if (
-      receivedBuf.length === 0 ||
-      receivedBuf.length !== expectedBuf.length ||
-      !crypto.timingSafeEqual(receivedBuf, expectedBuf)
-    ) {
+    let valid = false;
+    try {
+      valid = await isValidSignature(rawBody.toString("utf8"), signatureHeader, webhookSecret);
+    } catch (e: unknown) {
+      console.error("[sanity-webhook] 서명 검증 오류:", e instanceof Error ? e.message : String(e));
+      return res.status(500).json({ error: "Signature verification failed" });
+    }
+    if (!valid) {
       return res.status(401).json({ error: "Invalid webhook signature" });
     }
   } else {
